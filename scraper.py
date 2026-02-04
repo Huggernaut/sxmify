@@ -1,5 +1,4 @@
-import cloudscraper
-import requests
+from curl_cffi import requests
 from bs4 import BeautifulSoup
 import re
 import json
@@ -22,13 +21,12 @@ def load_fallback_stations():
 def get_stations():
     # Scrape the station list from xmplaylist.com/station
     url = "https://xmplaylist.com/station"
-    scraper = cloudscraper.create_scraper()
     try:
         print(f"Fetching stations from {url}...")
-        response = scraper.get(url)
+        response = requests.get(url, impersonate="chrome")
         print(f"Station Fetch Status: {response.status_code}")
         response.raise_for_status()
-    except requests.RequestException as e:
+    except Exception as e:
         print(f"Error fetching stations: {e}")
         return load_fallback_stations()
 
@@ -108,9 +106,8 @@ def fetch_from_api(station_id, mode, days=None, limit=60):
 
 def fetch_all_results(url, limit, params=None):
     print(f"API Fetch: {url} params={params}")
-    scraper = cloudscraper.create_scraper()
     try:
-        resp = scraper.get(url, params=params)
+        resp = requests.get(url, params=params, impersonate="chrome")
         if resp.status_code != 200:
             print(f"API Error {resp.status_code}")
             return []
@@ -132,8 +129,7 @@ def fetch_paged_results(url, target_count):
     while next_url and len(all_tracks) < target_count:
         print(f"Fetching Page: {next_url}")
         try:
-            scraper = cloudscraper.create_scraper()
-            resp = scraper.get(next_url)
+            resp = requests.get(next_url, impersonate="chrome")
             if resp.status_code != 200:
                 break
             
