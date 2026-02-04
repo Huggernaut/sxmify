@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success! - XM Playlist to Spotify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Success!</h1>
+        <p>Found <strong>{{ count }}</strong> tracks and added them to your playlist.</p>
+
+        <a href="{{ playlist_url }}" target="_blank" class="btn spotify-btn">Open in Spotify</a>
+
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn secondary-btn">Start Over</a>
+        </div>
+    </div>
+</body>
+
+</html>
