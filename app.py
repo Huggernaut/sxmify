@@ -16,7 +16,7 @@ app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 # Configuration
 SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 SPOTIPY_CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
-SPOTIPY_REDIRECT_URI = "http://127.0.0.1:5000/callback" 
+SPOTIPY_REDIRECT_URI = "https://sxmify.onrender.com/callback" 
 # User must update Dashboard to this URI or use the one they configured.
 
 def create_spotify_oauth():
@@ -281,4 +281,4 @@ def debug_info():
     return "<br>".join(info)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
