@@ -88,10 +88,6 @@
                     <span style="margin: 0 10px;">|</span>
                     <a href="{{ url_for('logout') }}" class="text-link" style="font-size: 0.9em;">Logout</a>
                 </div>
-                {% else %}
-                <div style="display: flex; align-items: center;">
-                    <a href="{{ url_for('login', next='review') }}" class="text-link" style="font-size: 0.9em;">Login</a>
-                </div>
                 {% endif %}
             </div>
         </div>
@@ -134,7 +130,7 @@
             <div style="margin-bottom: 1rem; margin-top: 1rem;">
                 <label for="custom_name" style="display: block; margin-bottom: 0.5rem; color: #b3b3b3;">Playlist Name
                     (Optional):</label>
-                <input type="text" id="custom_name" name="custom_name" placeholder="E.g. My Very Cool Playlist"
+                <input type="text" id="custom_name" name="custom_name" placeholder="E.g. My Awesome Mix"
                     style="width: 100%; padding: 10px; background: #252525; color: white; border: 1px solid #333; border-radius: 4px; box-sizing: border-box;">
             </div>
 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sxmify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Sxmify</h1>
+
+        {% if error %}
+        <div class="alert error">{{ error }}</div>
+        {% endif %}
+
+        <form action="{{ url_for('scrape') }}" method="POST" id="scrape-form">
+            <input type="hidden" id="station_name" name="station_name" value="">
+            <div class="form-group">
+                <label for="url">Select Station</label>
+                <select id="url" name="url" required>
+                    {% for station in stations %}
+                    <option value="{{ station.url }}">
+                        {{ station.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="scrape_type">Playlist Type</label>
+                <select id="scrape_type" name="scrape_type">
+                    <option value="recent">Recently Played</option>
+                    <option value="newest">Newest Additions</option>
+                    <option value="most_heard">Most Played</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="days_group" style="display: none;">
+                <label for="days">Time Period</label>
+                <select id="days" name="days">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="60">Last 60 Days</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="limit_group">
+                <label for="limit">Max Tracks</label>
+                <input type="number" id="limit" name="limit" value="100" min="1" max="500">
+            </div>
+            <button type="submit" class="btn primary-btn" id="scrape-btn">Find Tracks</button>
+        </form>
+    </div>
+
+    <script>
+        const btn = document.getElementById('scrape-btn');
+        if (btn) {
+            btn.addEventListener('click', function () {
+                // Set station name before submit
+                const select = document.getElementById('url');
+                const nameInput = document.getElementById('station_name');
+                if (select && select.selectedIndex >= 0) {
+                    nameInput.value = select.options[select.selectedIndex].text.trim();
+                }
+
+                this.innerHTML = 'Finding Tracks... (this may take a few seconds)';
+                this.classList.add('disabled');
+            });
+        }
+
+        const scrapeType = document.getElementById('scrape_type');
+        const daysGroup = document.getElementById('days_group');
+        const limitGroup = document.getElementById('limit_group');
+
+        if (scrapeType && daysGroup && limitGroup) {
+            scrapeType.addEventListener('change', function () {
+                // Reset display
+                daysGroup.style.display = 'none';
+                limitGroup.style.display = 'none';
+
+                if (this.value === 'most_heard') {
+                    daysGroup.style.display = 'block';
+                } else if (this.value === 'recent') {
+                    limitGroup.style.display = 'block';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

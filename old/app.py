@@ -16,7 +16,7 @@ app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 # Configuration
 SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 SPOTIPY_CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
-SPOTIPY_REDIRECT_URI = "https://sxmify.onrender.com/callback" 
+SPOTIPY_REDIRECT_URI = os.environ.get("SPOTIPY_REDIRECT_URI", "http://127.0.0.1:5000/callback") 
 # User must update Dashboard to this URI or use the one they configured.
 
 def create_spotify_oauth():
@@ -41,17 +41,21 @@ def index():
 def login():
     sp_oauth = create_spotify_oauth()
     auth_url = sp_oauth.get_authorize_url()
-    
-    # Check if we should return to review page
-    if request.args.get('next') == 'review':
-        session['return_to_review'] = True
-        
     return redirect(auth_url)
 
 @app.route('/callback')
 def callback():
     sp_oauth = create_spotify_oauth()
+    
+    # Preserve pending export before clearing session
+    pending_export = session.get('pending_export')
+    
     session.clear()
+    
+    # Restore pending export
+    if pending_export:
+        session['pending_export'] = pending_export
+
     code = request.args.get('code')
     token_info = sp_oauth.get_access_token(code)
     session['token_info'] = token_info
@@ -65,11 +69,6 @@ def callback():
             session['user_image_url'] = current_user['images'][0]['url']
     except:
         pass
-
-    # Check for return to review page
-    if session.get('return_to_review') and session.get('last_scrape'):
-         session.pop('return_to_review', None)
-         return redirect(url_for('show_review'))
 
     # Check for pending export
     pending_export = session.get('pending_export')
@@ -96,15 +95,6 @@ def scrape():
     scrape_type = request.form.get('scrape_type', 'recent')
     days = request.form.get('days', '7')
     limit = int(request.form.get('limit', 100))
-
-    # Store in session for potential return after login
-    session['last_scrape'] = {
-        'url': base_url,
-        'station_name': station_name,
-        'scrape_type': scrape_type,
-        'days': days,
-        'limit': limit
-    }
 
     print(f"DEBUG: base_url='{base_url}', scrape_type='{scrape_type}', days='{days}', limit={limit}")
 
@@ -156,69 +146,6 @@ def scrape():
                            is_logged_in=is_logged_in,
                            user_display_name=user_display_name,
                            user_image_url=user_image_url)
-
-
-@app.route('/review')
-def show_review():
-    """Display review page using session data (for redirects after login)"""
-    last_scrape = session.get('last_scrape')
-    if not last_scrape:
-        return redirect(url_for('index'))
-    
-    # Re-use variables
-    base_url = last_scrape.get('url')
-    station_name = last_scrape.get('station_name')
-    scrape_type = last_scrape.get('scrape_type')
-    days = last_scrape.get('days')
-    limit = last_scrape.get('limit')
-    
-    # Logic duplication from scrape() - cleaner refactor would be to extract this
-    # but for now, keep it simple.
-    
-    if not base_url:
-        return redirect(url_for('index'))
-        
-    base_url = base_url.rstrip('/')
-    target_url = base_url
-    scrape_description = "Tracks" 
-    
-    if scrape_type == 'newest':
-        target_url = f"{base_url}/newest"
-        scrape_description = "Newest Additions"
-    elif scrape_type == 'most_heard':
-        target_url = f"{base_url}/most-heard?days={days}"
-        scrape_description = f"Most Played (Last {days} Days)"
-    elif scrape_type == 'recent':
-        scrape_description = "Recently Played"
-
-    # Don't re-scrape if we can avoid it? 
-    # Actually we should re-scrape to be safe and simple, or store tracks in session (too big?)
-    # Re-scraping is safer for state.
-    
-    print(f"Re-Scraping {target_url} (limit={limit})...")
-    tracks = scrape_tracks(target_url, limit=limit)
-    
-    station_id = "unknown"
-    try:
-        parts = target_url.rstrip('/').split('/')
-        if 'station' in parts:
-            station_id = parts[parts.index('station') + 1]
-    except Exception:
-        pass
-        
-    is_logged_in = session.get('token_info') is not None
-    user_display_name = session.get('user_display_name')
-    user_image_url = session.get('user_image_url')
-
-    return render_template('review.html', 
-                            tracks=tracks, 
-                            target_url=target_url, 
-                            station_id=station_id, 
-                            station_name=station_name,
-                            scrape_description=scrape_description,
-                            is_logged_in=is_logged_in,
-                            user_display_name=user_display_name,
-                            user_image_url=user_image_url)
 
 
 @app.route('/export', methods=['POST'])
@@ -287,80 +214,35 @@ def finish_export(token_info, export_data):
     except spotipy.exceptions.SpotifyException as e:
          return render_template('index.html', error=f"Spotify Error: {e}")
 
+    return redirect(url_for('index'))
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
-@app.route('/debug')
-def debug_info():
-    import os
-    import json
-    import sys
+@app.route('/token')
+def show_token():
+    token_info = session.get('token_info')
+    if not token_info:
+        return redirect(url_for('login'))
+        
+    refresh_token = token_info.get('refresh_token')
     
-    info = []
-    info.append(f"Python Version: {sys.version}")
-    info.append(f"CWD: {os.getcwd()}")
-    
-    # Check directory listing
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        info.append(f"Script Dir: {current_dir}")
-        files = os.listdir(current_dir)
-        info.append(f"Files in Dir: {files}")
-        
-        json_path = os.path.join(current_dir, 'stations.json')
-        info.append(f"stations.json exists: {os.path.exists(json_path)}")
-        if os.path.exists(json_path):
-             info.append(f"stations.json size: {os.path.getsize(json_path)} bytes")
+    return f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; border: 1px solid #ccc; border-radius: 8px;">
+        <h2>Setup Automatic Updates</h2>
+        <p>To enable the background Cron Job, you need to add this <strong>Refresh Token</strong> to your Render Environment Variables.</p>
+        <hr>
+        <p><strong>SPOTIPY_REFRESH_TOKEN</strong></p>
+        <textarea style="width: 100%; height: 100px; font-family: monospace;">{refresh_token}</textarea>
+        <p><em>Copy the entire string above.</em></p>
+        <hr>
+        <p><a href="/">Back to Home</a></p>
+    </div>
+    """
 
-    except Exception as e:
-        info.append(f"File Error: {e}")
-        
-    # check stations
-    try:
-        from scraper import get_stations
-        stations = get_stations()
-        info.append(f"Station Count: {len(stations)}")
-        if stations:
-            info.append(f"Sample: {stations[0]}")
-    except Exception as e:
-        info.append(f"Station Error: {e}")
 
-    # check scraping tracks
-    try:
-        from scraper import scrape_tracks
-        # Test with SiriusXM Hits 1 (usually has data)
-        info.append("<br><strong>Testing Track Scrape (SiriusXM Hits 1)...</strong>")
-        tracks = scrape_tracks("https://xmplaylist.com/station/siriusxmhits1", limit=10)
-        info.append(f"Tracks Found: {len(tracks)}")
-        if tracks:
-            info.append(f"Sample Track: {tracks[0]}")
-        else:
-            info.append("No tracks found, likely blocked or empty.")
-            
-    except Exception as e:
-        info.append(f"Track Scrape Error: {e}")
-
-    # Raw API Test
-    try:
-        import cloudscraper
-        import html
-        url = "https://xmplaylist.com/api/station/siriusxmhits1"
-        info.append(f"<br><strong>Raw API Test ({url}) with CloudScraper...</strong>")
-        
-        scraper = cloudscraper.create_scraper()
-        resp = scraper.get(url)
-        info.append(f"Status Code: {resp.status_code}")
-        
-        text = resp.text
-        # Preview content (escape HTML to prevent rendering if it's a block page)
-        preview = html.escape(text[:1000])
-        info.append(f"Response Preview: {preview}")
-    except Exception as e:
-        info.append(f"Raw Request Error: {e}")
-        
-    return "<br>".join(info)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True)

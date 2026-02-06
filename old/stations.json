@@ -1,0 +1,1192 @@
+[
+  {
+    "name": "2 - SiriusXM Hits 1",
+    "url": "https://xmplaylist.com/station/siriusxmhits1",
+    "id": "siriusxmhits1",
+    "number": 2,
+    "display_name": "2 - SiriusXM Hits 1"
+  },
+  {
+    "name": "3 - 30SiriusXM Silk 330",
+    "url": "https://xmplaylist.com/station/siriusxmsilk330",
+    "id": "siriusxmsilk330",
+    "number": 3,
+    "display_name": "3 - 30SiriusXM Silk 330"
+  },
+  {
+    "name": "3 - Unwell Music",
+    "url": "https://xmplaylist.com/station/unwellmusic",
+    "id": "unwellmusic",
+    "number": 3,
+    "display_name": "3 - Unwell Music"
+  },
+  {
+    "name": "4 - Life with John Mayer",
+    "url": "https://xmplaylist.com/station/lifewithjohnmayer",
+    "id": "lifewithjohnmayer",
+    "number": 4,
+    "display_name": "4 - Life with John Mayer"
+  },
+  {
+    "name": "4 - SiriusXM 4",
+    "url": "https://xmplaylist.com/station/siriusxm4",
+    "id": "siriusxm4",
+    "number": 4,
+    "display_name": "4 - SiriusXM 4"
+  },
+  {
+    "name": "5 - The Pulse",
+    "url": "https://xmplaylist.com/station/thepulse",
+    "id": "thepulse",
+    "number": 5,
+    "display_name": "5 - The Pulse"
+  },
+  {
+    "name": "6 - PopRocks",
+    "url": "https://xmplaylist.com/station/poprocks",
+    "id": "poprocks",
+    "number": 6,
+    "display_name": "6 - PopRocks"
+  },
+  {
+    "name": "7 - 70s on 7",
+    "url": "https://xmplaylist.com/station/70son7",
+    "id": "70son7",
+    "number": 7,
+    "display_name": "7 - 70s on 7"
+  },
+  {
+    "name": "8 - 80s on 8",
+    "url": "https://xmplaylist.com/station/80son8",
+    "id": "80son8",
+    "number": 8,
+    "display_name": "8 - 80s on 8"
+  },
+  {
+    "name": "9 - 90s on 9",
+    "url": "https://xmplaylist.com/station/90son9",
+    "id": "90son9",
+    "number": 9,
+    "display_name": "9 - 90s on 9"
+  },
+  {
+    "name": "10 - Pop2K",
+    "url": "https://xmplaylist.com/station/pop2k",
+    "id": "pop2k",
+    "number": 10,
+    "display_name": "10 - Pop2K"
+  },
+  {
+    "name": "11 - The 10s Spot",
+    "url": "https://xmplaylist.com/station/the10sspot",
+    "id": "the10sspot",
+    "number": 11,
+    "display_name": "11 - The 10s Spot"
+  },
+  {
+    "name": "12 - The Kelly Clarkson Connection",
+    "url": "https://xmplaylist.com/station/kellyclarksonconnection",
+    "id": "kellyclarksonconnection",
+    "number": 12,
+    "display_name": "12 - The Kelly Clarkson Connection"
+  },
+  {
+    "name": "13 - Pitbull's Globalization",
+    "url": "https://xmplaylist.com/station/pitbullsglobalization",
+    "id": "pitbullsglobalization",
+    "number": 13,
+    "display_name": "13 - Pitbull's Globalization"
+  },
+  {
+    "name": "14 - The Bridge",
+    "url": "https://xmplaylist.com/station/thebridge",
+    "id": "thebridge",
+    "number": 14,
+    "display_name": "14 - The Bridge"
+  },
+  {
+    "name": "15 - Yacht Rock Radio",
+    "url": "https://xmplaylist.com/station/yachtrockradio",
+    "id": "yachtrockradio",
+    "number": 15,
+    "display_name": "15 - Yacht Rock Radio"
+  },
+  {
+    "name": "16 - The Blend",
+    "url": "https://xmplaylist.com/station/theblend",
+    "id": "theblend",
+    "number": 16,
+    "display_name": "16 - The Blend"
+  },
+  {
+    "name": "17 - The Coffee House",
+    "url": "https://xmplaylist.com/station/thecoffeehouse",
+    "id": "thecoffeehouse",
+    "number": 17,
+    "display_name": "17 - The Coffee House"
+  },
+  {
+    "name": "18 - The Beatles Channel",
+    "url": "https://xmplaylist.com/station/thebeatleschannel",
+    "id": "thebeatleschannel",
+    "number": 18,
+    "display_name": "18 - The Beatles Channel"
+  },
+  {
+    "name": "19 - Bob Marley's Tuff Gong",
+    "url": "https://xmplaylist.com/station/bobmarleystuffgong",
+    "id": "bobmarleystuffgong",
+    "number": 19,
+    "display_name": "19 - Bob Marley's Tuff Gong"
+  },
+  {
+    "name": "20 - E Street Radio",
+    "url": "https://xmplaylist.com/station/estreetradio",
+    "id": "estreetradio",
+    "number": 20,
+    "display_name": "20 - E Street Radio"
+  },
+  {
+    "name": "21 - Underground Garage",
+    "url": "https://xmplaylist.com/station/undergroundgarage",
+    "id": "undergroundgarage",
+    "number": 21,
+    "display_name": "21 - Underground Garage"
+  },
+  {
+    "name": "22 - Pearl Jam Radio",
+    "url": "https://xmplaylist.com/station/pearljamradio",
+    "id": "pearljamradio",
+    "number": 22,
+    "display_name": "22 - Pearl Jam Radio"
+  },
+  {
+    "name": "23 - Grateful Dead",
+    "url": "https://xmplaylist.com/station/gratefuldead",
+    "id": "gratefuldead",
+    "number": 23,
+    "display_name": "23 - Grateful Dead"
+  },
+  {
+    "name": "24 - Radio Margaritaville",
+    "url": "https://xmplaylist.com/station/radiomargaritaville",
+    "id": "radiomargaritaville",
+    "number": 24,
+    "display_name": "24 - Radio Margaritaville"
+  },
+  {
+    "name": "25 - Classic Rewind",
+    "url": "https://xmplaylist.com/station/classicrewind",
+    "id": "classicrewind",
+    "number": 25,
+    "display_name": "25 - Classic Rewind"
+  },
+  {
+    "name": "26 - Classic Vinyl",
+    "url": "https://xmplaylist.com/station/classicvinyl",
+    "id": "classicvinyl",
+    "number": 26,
+    "display_name": "26 - Classic Vinyl"
+  },
+  {
+    "name": "27 - Alt2K",
+    "url": "https://xmplaylist.com/station/alt2k",
+    "id": "alt2k",
+    "number": 27,
+    "display_name": "27 - Alt2K"
+  },
+  {
+    "name": "28 - The Spectrum",
+    "url": "https://xmplaylist.com/station/thespectrum",
+    "id": "thespectrum",
+    "number": 28,
+    "display_name": "28 - The Spectrum"
+  },
+  {
+    "name": "29 - Phish Radio",
+    "url": "https://xmplaylist.com/station/phishradio",
+    "id": "phishradio",
+    "number": 29,
+    "display_name": "29 - Phish Radio"
+  },
+  {
+    "name": "30 - Dave Matthews Band Radio",
+    "url": "https://xmplaylist.com/station/davematthewsbandradio",
+    "id": "davematthewsbandradio",
+    "number": 30,
+    "display_name": "30 - Dave Matthews Band Radio"
+  },
+  {
+    "name": "31 - Tom Petty Radio",
+    "url": "https://xmplaylist.com/station/tompettyradio",
+    "id": "tompettyradio",
+    "number": 31,
+    "display_name": "31 - Tom Petty Radio"
+  },
+  {
+    "name": "32 - U2 X-Radio",
+    "url": "https://xmplaylist.com/station/u2xradio",
+    "id": "u2xradio",
+    "number": 32,
+    "display_name": "32 - U2 X-Radio"
+  },
+  {
+    "name": "34 - Lithium",
+    "url": "https://xmplaylist.com/station/lithium",
+    "id": "lithium",
+    "number": 34,
+    "display_name": "34 - Lithium"
+  },
+  {
+    "name": "35 - SiriusXMU",
+    "url": "https://xmplaylist.com/station/siriusxmu",
+    "id": "siriusxmu",
+    "number": 35,
+    "display_name": "35 - SiriusXMU"
+  },
+  {
+    "name": "36 - Alt Nation",
+    "url": "https://xmplaylist.com/station/altnation",
+    "id": "altnation",
+    "number": 36,
+    "display_name": "36 - Alt Nation"
+  },
+  {
+    "name": "37 - Octane",
+    "url": "https://xmplaylist.com/station/octane",
+    "id": "octane",
+    "number": 37,
+    "display_name": "37 - Octane"
+  },
+  {
+    "name": "38 - Ozzy's Boneyard",
+    "url": "https://xmplaylist.com/station/ozzysboneyard",
+    "id": "ozzysboneyard",
+    "number": 38,
+    "display_name": "38 - Ozzy's Boneyard"
+  },
+  {
+    "name": "39 - Hair Nation",
+    "url": "https://xmplaylist.com/station/hairnation",
+    "id": "hairnation",
+    "number": 39,
+    "display_name": "39 - Hair Nation"
+  },
+  {
+    "name": "40 - Liquid Metal",
+    "url": "https://xmplaylist.com/station/liquidmetal",
+    "id": "liquidmetal",
+    "number": 40,
+    "display_name": "40 - Liquid Metal"
+  },
+  {
+    "name": "41 - SiriusXM Turbo",
+    "url": "https://xmplaylist.com/station/siriusxmturbo",
+    "id": "siriusxmturbo",
+    "number": 41,
+    "display_name": "41 - SiriusXM Turbo"
+  },
+  {
+    "name": "42 - Maximum Metallica",
+    "url": "https://xmplaylist.com/station/maximummetallica",
+    "id": "maximummetallica",
+    "number": 42,
+    "display_name": "42 - Maximum Metallica"
+  },
+  {
+    "name": "43 - Rock The Bells Radio",
+    "url": "https://xmplaylist.com/station/rockthebellsradio",
+    "id": "rockthebellsradio",
+    "number": 43,
+    "display_name": "43 - Rock The Bells Radio"
+  },
+  {
+    "name": "44 - Hip-Hop Nation",
+    "url": "https://xmplaylist.com/station/hiphopnation",
+    "id": "hiphopnation",
+    "number": 44,
+    "display_name": "44 - Hip-Hop Nation"
+  },
+  {
+    "name": "45 - Shade 45",
+    "url": "https://xmplaylist.com/station/shade45",
+    "id": "shade45",
+    "number": 45,
+    "display_name": "45 - Shade 45"
+  },
+  {
+    "name": "46 - The Heat",
+    "url": "https://xmplaylist.com/station/theheat",
+    "id": "theheat",
+    "number": 46,
+    "display_name": "46 - The Heat"
+  },
+  {
+    "name": "47 - Heart & Soul",
+    "url": "https://xmplaylist.com/station/heartsoul",
+    "id": "heartsoul",
+    "number": 47,
+    "display_name": "47 - Heart & Soul"
+  },
+  {
+    "name": "48 - The Flow",
+    "url": "https://xmplaylist.com/station/theflow",
+    "id": "theflow",
+    "number": 48,
+    "display_name": "48 - The Flow"
+  },
+  {
+    "name": "49 - Flex2K",
+    "url": "https://xmplaylist.com/station/flex2k",
+    "id": "flex2k",
+    "number": 49,
+    "display_name": "49 - Flex2K"
+  },
+  {
+    "name": "50 - SiriusXM FLY",
+    "url": "https://xmplaylist.com/station/siriusxmfly",
+    "id": "siriusxmfly",
+    "number": 50,
+    "display_name": "50 - SiriusXM FLY"
+  },
+  {
+    "name": "51 - The Groove",
+    "url": "https://xmplaylist.com/station/thegroove",
+    "id": "thegroove",
+    "number": 51,
+    "display_name": "51 - The Groove"
+  },
+  {
+    "name": "52 - BPM",
+    "url": "https://xmplaylist.com/station/bpm",
+    "id": "bpm",
+    "number": 52,
+    "display_name": "52 - BPM"
+  },
+  {
+    "name": "53 - Diplo's Revolution",
+    "url": "https://xmplaylist.com/station/diplosrevolution",
+    "id": "diplosrevolution",
+    "number": 53,
+    "display_name": "53 - Diplo's Revolution"
+  },
+  {
+    "name": "54 - Studio 54 Radio",
+    "url": "https://xmplaylist.com/station/studio54radio",
+    "id": "studio54radio",
+    "number": 54,
+    "display_name": "54 - Studio 54 Radio"
+  },
+  {
+    "name": "55 - SiriusXM Chill",
+    "url": "https://xmplaylist.com/station/siriusxmchill",
+    "id": "siriusxmchill",
+    "number": 55,
+    "display_name": "55 - SiriusXM Chill"
+  },
+  {
+    "name": "56 - The Highway",
+    "url": "https://xmplaylist.com/station/thehighway",
+    "id": "thehighway",
+    "number": 56,
+    "display_name": "56 - The Highway"
+  },
+  {
+    "name": "57 - Y2Kountry",
+    "url": "https://xmplaylist.com/station/y2kountry",
+    "id": "y2kountry",
+    "number": 57,
+    "display_name": "57 - Y2Kountry"
+  },
+  {
+    "name": "58 - Prime Country",
+    "url": "https://xmplaylist.com/station/primecountry",
+    "id": "primecountry",
+    "number": 58,
+    "display_name": "58 - Prime Country"
+  },
+  {
+    "name": "59 - No Shoes Radio",
+    "url": "https://xmplaylist.com/station/noshoesradio",
+    "id": "noshoesradio",
+    "number": 59,
+    "display_name": "59 - No Shoes Radio"
+  },
+  {
+    "name": "60 - Carrie's Country",
+    "url": "https://xmplaylist.com/station/carriescountry",
+    "id": "carriescountry",
+    "number": 60,
+    "display_name": "60 - Carrie's Country"
+  },
+  {
+    "name": "61 - Willie's Roadhouse",
+    "url": "https://xmplaylist.com/station/williesroadhouse",
+    "id": "williesroadhouse",
+    "number": 61,
+    "display_name": "61 - Willie's Roadhouse"
+  },
+  {
+    "name": "62 - Outlaw Country",
+    "url": "https://xmplaylist.com/station/outlawcountry",
+    "id": "outlawcountry",
+    "number": 62,
+    "display_name": "62 - Outlaw Country"
+  },
+  {
+    "name": "63 - Chris Stapleton Radio",
+    "url": "https://xmplaylist.com/station/chrisstapletonradio",
+    "id": "chrisstapletonradio",
+    "number": 63,
+    "display_name": "63 - Chris Stapleton Radio"
+  },
+  {
+    "name": "64 - Kirk Franklin's Praise",
+    "url": "https://xmplaylist.com/station/kirkfranklinspraise",
+    "id": "kirkfranklinspraise",
+    "number": 64,
+    "display_name": "64 - Kirk Franklin's Praise"
+  },
+  {
+    "name": "65 - The Message",
+    "url": "https://xmplaylist.com/station/themessage",
+    "id": "themessage",
+    "number": 65,
+    "display_name": "65 - The Message"
+  },
+  {
+    "name": "66 - Watercolors",
+    "url": "https://xmplaylist.com/station/watercolors",
+    "id": "watercolors",
+    "number": 66,
+    "display_name": "66 - Watercolors"
+  },
+  {
+    "name": "67 - Real Jazz",
+    "url": "https://xmplaylist.com/station/realjazz",
+    "id": "realjazz",
+    "number": 67,
+    "display_name": "67 - Real Jazz"
+  },
+  {
+    "name": "68 - Message Worship",
+    "url": "https://xmplaylist.com/station/messageworship",
+    "id": "messageworship",
+    "number": 68,
+    "display_name": "68 - Message Worship"
+  },
+  {
+    "name": "69 - On Broadway",
+    "url": "https://xmplaylist.com/station/onbroadway",
+    "id": "onbroadway",
+    "number": 69,
+    "display_name": "69 - On Broadway"
+  },
+  {
+    "name": "70 - Siriusly Sinatra",
+    "url": "https://xmplaylist.com/station/siriuslysinatra",
+    "id": "siriuslysinatra",
+    "number": 70,
+    "display_name": "70 - Siriusly Sinatra"
+  },
+  {
+    "name": "71 - 40s Junction",
+    "url": "https://xmplaylist.com/station/40sjunction",
+    "id": "40sjunction",
+    "number": 71,
+    "display_name": "71 - 40s Junction"
+  },
+  {
+    "name": "72 - 50s Gold",
+    "url": "https://xmplaylist.com/station/50sgold",
+    "id": "50sgold",
+    "number": 72,
+    "display_name": "72 - 50s Gold"
+  },
+  {
+    "name": "73 - 60s Gold",
+    "url": "https://xmplaylist.com/station/60sgold",
+    "id": "60sgold",
+    "number": 73,
+    "display_name": "73 - 60s Gold"
+  },
+  {
+    "name": "74 - Smokey's Soul Town",
+    "url": "https://xmplaylist.com/station/smokeyssoultown",
+    "id": "smokeyssoultown",
+    "number": 74,
+    "display_name": "74 - Smokey's Soul Town"
+  },
+  {
+    "name": "75 - BB King's Bluesville",
+    "url": "https://xmplaylist.com/station/bbkingsbluesville",
+    "id": "bbkingsbluesville",
+    "number": 75,
+    "display_name": "75 - BB King's Bluesville"
+  },
+  {
+    "name": "76 - Elvis Radio",
+    "url": "https://xmplaylist.com/station/elvisradio",
+    "id": "elvisradio",
+    "number": 76,
+    "display_name": "76 - Elvis Radio"
+  },
+  {
+    "name": "77 - Bluegrass Junction",
+    "url": "https://xmplaylist.com/station/bluegrassjunction",
+    "id": "bluegrassjunction",
+    "number": 77,
+    "display_name": "77 - Bluegrass Junction"
+  },
+  {
+    "name": "78 - Symphony Hall",
+    "url": "https://xmplaylist.com/station/symphonyhall",
+    "id": "symphonyhall",
+    "number": 78,
+    "display_name": "78 - Symphony Hall"
+  },
+  {
+    "name": "79 - Super Bowl LX Radio",
+    "url": "https://xmplaylist.com/station/superbowllxradio",
+    "id": "superbowllxradio",
+    "number": 79,
+    "display_name": "79 - Super Bowl LX Radio"
+  },
+  {
+    "name": "93 - Netflix Is A Joke Radio",
+    "url": "https://xmplaylist.com/station/netflixisajokeradio",
+    "id": "netflixisajokeradio",
+    "number": 93,
+    "display_name": "93 - Netflix Is A Joke Radio"
+  },
+  {
+    "name": "94 - Comedy Greats",
+    "url": "https://xmplaylist.com/station/comedygreats",
+    "id": "comedygreats",
+    "number": 94,
+    "display_name": "94 - Comedy Greats"
+  },
+  {
+    "name": "95 - Comedy Central Radio",
+    "url": "https://xmplaylist.com/station/comedycentralradio",
+    "id": "comedycentralradio",
+    "number": 95,
+    "display_name": "95 - Comedy Central Radio"
+  },
+  {
+    "name": "96 - Kevin Hart's LOL Radio",
+    "url": "https://xmplaylist.com/station/kevinhartslolradio",
+    "id": "kevinhartslolradio",
+    "number": 96,
+    "display_name": "96 - Kevin Hart's LOL Radio"
+  },
+  {
+    "name": "97 - Comedy Roundup",
+    "url": "https://xmplaylist.com/station/comedyroundup",
+    "id": "comedyroundup",
+    "number": 97,
+    "display_name": "97 - Comedy Roundup"
+  },
+  {
+    "name": "98 - Pure Comedy",
+    "url": "https://xmplaylist.com/station/purecomedy",
+    "id": "purecomedy",
+    "number": 98,
+    "display_name": "98 - Pure Comedy"
+  },
+  {
+    "name": "99 - Raw Comedy",
+    "url": "https://xmplaylist.com/station/rawcomedy",
+    "id": "rawcomedy",
+    "number": 99,
+    "display_name": "99 - Raw Comedy"
+  },
+  {
+    "name": "104 - Conan O'Brien Radio",
+    "url": "https://xmplaylist.com/station/conanobrienradio",
+    "id": "conanobrienradio",
+    "number": 104,
+    "display_name": "104 - Conan O'Brien Radio"
+  },
+  {
+    "name": "105 - SiriusXM 105",
+    "url": "https://xmplaylist.com/station/siriusxm105",
+    "id": "siriusxm105",
+    "number": 105,
+    "display_name": "105 - SiriusXM 105"
+  },
+  {
+    "name": "133 - Disney Hits",
+    "url": "https://xmplaylist.com/station/disneyhits",
+    "id": "disneyhits",
+    "number": 133,
+    "display_name": "133 - Disney Hits"
+  },
+  {
+    "name": "134 - Kids Place",
+    "url": "https://xmplaylist.com/station/kidsplace",
+    "id": "kidsplace",
+    "number": 134,
+    "display_name": "134 - Kids Place"
+  },
+  {
+    "name": "135 - KIDZ BOP Radio",
+    "url": "https://xmplaylist.com/station/kidzbopradio",
+    "id": "kidzbopradio",
+    "number": 135,
+    "display_name": "135 - KIDZ BOP Radio"
+  },
+  {
+    "name": "136 - CoComelon & Friends",
+    "url": "https://xmplaylist.com/station/cocomelonfriends",
+    "id": "cocomelonfriends",
+    "number": 136,
+    "display_name": "136 - CoComelon & Friends"
+  },
+  {
+    "name": "140 - Holy Culture Radio",
+    "url": "https://xmplaylist.com/station/holycultureradio",
+    "id": "holycultureradio",
+    "number": 140,
+    "display_name": "140 - Holy Culture Radio"
+  },
+  {
+    "name": "149 - Escape",
+    "url": "https://xmplaylist.com/station/escape",
+    "id": "escape",
+    "number": 149,
+    "display_name": "149 - Escape"
+  },
+  {
+    "name": "150 - Bill Gaither's enLighten",
+    "url": "https://xmplaylist.com/station/billgaithersenlighten",
+    "id": "billgaithersenlighten",
+    "number": 150,
+    "display_name": "150 - Bill Gaither's enLighten"
+  },
+  {
+    "name": "152 - Caliente",
+    "url": "https://xmplaylist.com/station/caliente",
+    "id": "caliente",
+    "number": 152,
+    "display_name": "152 - Caliente"
+  },
+  {
+    "name": "153 - \u00c1guila",
+    "url": "https://xmplaylist.com/station/aguila",
+    "id": "aguila",
+    "number": 153,
+    "display_name": "153 - \u00c1guila"
+  },
+  {
+    "name": "154 - En Vivo",
+    "url": "https://xmplaylist.com/station/envivo",
+    "id": "envivo",
+    "number": 154,
+    "display_name": "154 - En Vivo"
+  },
+  {
+    "name": "155 - Latin Vault",
+    "url": "https://xmplaylist.com/station/latinvault",
+    "id": "latinvault",
+    "number": 155,
+    "display_name": "155 - Latin Vault"
+  },
+  {
+    "name": "163 - Attitude Franco",
+    "url": "https://xmplaylist.com/station/attitudefranco",
+    "id": "attitudefranco",
+    "number": 163,
+    "display_name": "163 - Attitude Franco"
+  },
+  {
+    "name": "164 - Mixtape: North",
+    "url": "https://xmplaylist.com/station/mixtapenorth",
+    "id": "mixtapenorth",
+    "number": 164,
+    "display_name": "164 - Mixtape: North"
+  },
+  {
+    "name": "165 - The Indigiverse",
+    "url": "https://xmplaylist.com/station/theindigiverse",
+    "id": "theindigiverse",
+    "number": 165,
+    "display_name": "165 - The Indigiverse"
+  },
+  {
+    "name": "166 - Racines Musicales",
+    "url": "https://xmplaylist.com/station/racinesmusicales",
+    "id": "racinesmusicales",
+    "number": 166,
+    "display_name": "166 - Racines Musicales"
+  },
+  {
+    "name": "168 - SiriusXM Comedy Club",
+    "url": "https://xmplaylist.com/station/siriusxmcomedyclub",
+    "id": "siriusxmcomedyclub",
+    "number": 168,
+    "display_name": "168 - SiriusXM Comedy Club"
+  },
+  {
+    "name": "171 - Top of the Country Radio",
+    "url": "https://xmplaylist.com/station/topofthecountryradio",
+    "id": "topofthecountryradio",
+    "number": 171,
+    "display_name": "171 - Top of the Country Radio"
+  },
+  {
+    "name": "173 - The Verge",
+    "url": "https://xmplaylist.com/station/theverge",
+    "id": "theverge",
+    "number": 173,
+    "display_name": "173 - The Verge"
+  },
+  {
+    "name": "174 - Influence Franco",
+    "url": "https://xmplaylist.com/station/influencefranco",
+    "id": "influencefranco",
+    "number": 174,
+    "display_name": "174 - Influence Franco"
+  },
+  {
+    "name": "301 - Road Trip Radio",
+    "url": "https://xmplaylist.com/station/roadtripradio",
+    "id": "roadtripradio",
+    "number": 301,
+    "display_name": "301 - Road Trip Radio"
+  },
+  {
+    "name": "302 - Andy Cohen's Kiki Lounge",
+    "url": "https://xmplaylist.com/station/andycohenskikilounge",
+    "id": "andycohenskikilounge",
+    "number": 302,
+    "display_name": "302 - Andy Cohen's Kiki Lounge"
+  },
+  {
+    "name": "305 - Mosaic",
+    "url": "https://xmplaylist.com/station/mosaic",
+    "id": "mosaic",
+    "number": 305,
+    "display_name": "305 - Mosaic"
+  },
+  {
+    "name": "308 - Deep Tracks",
+    "url": "https://xmplaylist.com/station/deeptracks",
+    "id": "deeptracks",
+    "number": 308,
+    "display_name": "308 - Deep Tracks"
+  },
+  {
+    "name": "309 - Jam On 309",
+    "url": "https://xmplaylist.com/station/jamon309",
+    "id": "jamon309",
+    "number": 309,
+    "display_name": "309 - Jam On 309"
+  },
+  {
+    "name": "312 - Bon Jovi Radio",
+    "url": "https://xmplaylist.com/station/bonjoviradio",
+    "id": "bonjoviradio",
+    "number": 312,
+    "display_name": "312 - Bon Jovi Radio"
+  },
+  {
+    "name": "314 - FACTION PUNK",
+    "url": "https://xmplaylist.com/station/factionpunk",
+    "id": "factionpunk",
+    "number": 314,
+    "display_name": "314 - FACTION PUNK"
+  },
+  {
+    "name": "315 - Red Hot Chili Peppers",
+    "url": "https://xmplaylist.com/station/redhotchilipeppers",
+    "id": "redhotchilipeppers",
+    "number": 315,
+    "display_name": "315 - Red Hot Chili Peppers"
+  },
+  {
+    "name": "331 - st Wave",
+    "url": "https://xmplaylist.com/station/1stwave",
+    "id": "1stwave",
+    "number": 331,
+    "display_name": "331 - st Wave"
+  },
+  {
+    "name": "332 - Shaggy Boombastic Radio",
+    "url": "https://xmplaylist.com/station/shaggyboombasticradio",
+    "id": "shaggyboombasticradio",
+    "number": 332,
+    "display_name": "332 - Shaggy Boombastic Radio"
+  },
+  {
+    "name": "340 - Radio Monaco",
+    "url": "https://xmplaylist.com/station/radiomonaco",
+    "id": "radiomonaco",
+    "number": 340,
+    "display_name": "340 - Radio Monaco"
+  },
+  {
+    "name": "341 - Utopia",
+    "url": "https://xmplaylist.com/station/utopia",
+    "id": "utopia",
+    "number": 341,
+    "display_name": "341 - Utopia"
+  },
+  {
+    "name": "349 - Bakersfield Beat",
+    "url": "https://xmplaylist.com/station/bakersfieldbeat",
+    "id": "bakersfieldbeat",
+    "number": 349,
+    "display_name": "349 - Bakersfield Beat"
+  },
+  {
+    "name": "350 - Red White & Booze",
+    "url": "https://xmplaylist.com/station/redwhitebooze",
+    "id": "redwhitebooze",
+    "number": 350,
+    "display_name": "350 - Red White & Booze"
+  },
+  {
+    "name": "359 - North Americana",
+    "url": "https://xmplaylist.com/station/northamericana",
+    "id": "northamericana",
+    "number": 359,
+    "display_name": "359 - North Americana"
+  },
+  {
+    "name": "362 - Grown Folk JAMZ",
+    "url": "https://xmplaylist.com/station/grownfolkjamz",
+    "id": "grownfolkjamz",
+    "number": 362,
+    "display_name": "362 - Grown Folk JAMZ"
+  },
+  {
+    "name": "507 - Mariah Radio",
+    "url": "https://xmplaylist.com/station/mariahradio",
+    "id": "mariahradio",
+    "number": 507,
+    "display_name": "507 - Mariah Radio"
+  },
+  {
+    "name": "550 - Pop Top 500",
+    "url": "https://xmplaylist.com/station/poptop500",
+    "id": "poptop500",
+    "number": 550,
+    "display_name": "550 - Pop Top 500"
+  },
+  {
+    "name": "551 - 80s on 8 Top 500",
+    "url": "https://xmplaylist.com/station/80son8top500",
+    "id": "80son8top500",
+    "number": 551,
+    "display_name": "551 - 80s on 8 Top 500"
+  },
+  {
+    "name": "552 - 90s on 9 Top 500",
+    "url": "https://xmplaylist.com/station/90son9top500",
+    "id": "90son9top500",
+    "number": 552,
+    "display_name": "552 - 90s on 9 Top 500"
+  },
+  {
+    "name": "553 - Classic Rock Top 1000",
+    "url": "https://xmplaylist.com/station/classicrocktop1000",
+    "id": "classicrocktop1000",
+    "number": 553,
+    "display_name": "553 - Classic Rock Top 1000"
+  },
+  {
+    "name": "556 - Hip-Hop Chronicles",
+    "url": "https://xmplaylist.com/station/hiphopchronicles",
+    "id": "hiphopchronicles",
+    "number": 556,
+    "display_name": "556 - Hip-Hop Chronicles"
+  },
+  {
+    "name": "558 - Country Top 1000",
+    "url": "https://xmplaylist.com/station/countrytop1000",
+    "id": "countrytop1000",
+    "number": 558,
+    "display_name": "558 - Country Top 1000"
+  },
+  {
+    "name": "560 - Billboard Top 500",
+    "url": "https://xmplaylist.com/station/billboardtop500",
+    "id": "billboardtop500",
+    "number": 560,
+    "display_name": "560 - Billboard Top 500"
+  },
+  {
+    "name": "602 - Holiday Traditions",
+    "url": "https://xmplaylist.com/station/holidaytraditions",
+    "id": "holidaytraditions",
+    "number": 602,
+    "display_name": "602 - Holiday Traditions"
+  },
+  {
+    "name": "702 - Disney Jr. Radio",
+    "url": "https://xmplaylist.com/station/disneyjrradio",
+    "id": "disneyjrradio",
+    "number": 702,
+    "display_name": "702 - Disney Jr. Radio"
+  },
+  {
+    "name": "703 - Pandora Now",
+    "url": "https://xmplaylist.com/station/pandoranow",
+    "id": "pandoranow",
+    "number": 703,
+    "display_name": "703 - Pandora Now"
+  },
+  {
+    "name": "704 - SoulCycle Radio",
+    "url": "https://xmplaylist.com/station/soulcycleradio",
+    "id": "soulcycleradio",
+    "number": 704,
+    "display_name": "704 - SoulCycle Radio"
+  },
+  {
+    "name": "705 - SiriusXM K-Pop",
+    "url": "https://xmplaylist.com/station/siriusxmkpop",
+    "id": "siriusxmkpop",
+    "number": 705,
+    "display_name": "705 - SiriusXM K-Pop"
+  },
+  {
+    "name": "708 - SiriusXM Love",
+    "url": "https://xmplaylist.com/station/siriusxmlove",
+    "id": "siriusxmlove",
+    "number": 708,
+    "display_name": "708 - SiriusXM Love"
+  },
+  {
+    "name": "709 - SiriusXO",
+    "url": "https://xmplaylist.com/station/siriusxo",
+    "id": "siriusxo",
+    "number": 709,
+    "display_name": "709 - SiriusXO"
+  },
+  {
+    "name": "710 - The Loft",
+    "url": "https://xmplaylist.com/station/theloft",
+    "id": "theloft",
+    "number": 710,
+    "display_name": "710 - The Loft"
+  },
+  {
+    "name": "711 - Petty's Buried Treasure",
+    "url": "https://xmplaylist.com/station/pettysburiedtreasure",
+    "id": "pettysburiedtreasure",
+    "number": 711,
+    "display_name": "711 - Petty's Buried Treasure"
+  },
+  {
+    "name": "712 - Marky Ramone's Punk Rock",
+    "url": "https://xmplaylist.com/station/markyramonespunkrock",
+    "id": "markyramonespunkrock",
+    "number": 712,
+    "display_name": "712 - Marky Ramone's Punk Rock"
+  },
+  {
+    "name": "713 - RockBar",
+    "url": "https://xmplaylist.com/station/rockbar",
+    "id": "rockbar",
+    "number": 713,
+    "display_name": "713 - RockBar"
+  },
+  {
+    "name": "715 - Classic Rock Party",
+    "url": "https://xmplaylist.com/station/classicrockparty",
+    "id": "classicrockparty",
+    "number": 715,
+    "display_name": "715 - Classic Rock Party"
+  },
+  {
+    "name": "721 - Stevie's Coolest Songs",
+    "url": "https://xmplaylist.com/station/steviescoolestsongs",
+    "id": "steviescoolestsongs",
+    "number": 721,
+    "display_name": "721 - Stevie's Coolest Songs"
+  },
+  {
+    "name": "724 - SoundCloud Radio",
+    "url": "https://xmplaylist.com/station/soundcloudradio",
+    "id": "soundcloudradio",
+    "number": 724,
+    "display_name": "724 - SoundCloud Radio"
+  },
+  {
+    "name": "735 - Steve Aoki's Remix Radio",
+    "url": "https://xmplaylist.com/station/steveaokisremixradio",
+    "id": "steveaokisremixradio",
+    "number": 735,
+    "display_name": "735 - Steve Aoki's Remix Radio"
+  },
+  {
+    "name": "736 - A State of Armin",
+    "url": "https://xmplaylist.com/station/astateofarmin",
+    "id": "astateofarmin",
+    "number": 736,
+    "display_name": "736 - A State of Armin"
+  },
+  {
+    "name": "738 - One World Radio",
+    "url": "https://xmplaylist.com/station/oneworldradio",
+    "id": "oneworldradio",
+    "number": 738,
+    "display_name": "738 - One World Radio"
+  },
+  {
+    "name": "739 - Savior Sunday Daily",
+    "url": "https://xmplaylist.com/station/saviorsundaydaily",
+    "id": "saviorsundaydaily",
+    "number": 739,
+    "display_name": "739 - Savior Sunday Daily"
+  },
+  {
+    "name": "740 - Outsiders Radio",
+    "url": "https://xmplaylist.com/station/outsidersradio",
+    "id": "outsidersradio",
+    "number": 740,
+    "display_name": "740 - Outsiders Radio"
+  },
+  {
+    "name": "741 - The Village",
+    "url": "https://xmplaylist.com/station/thevillage",
+    "id": "thevillage",
+    "number": 741,
+    "display_name": "741 - The Village"
+  },
+  {
+    "name": "744 - Met Opera Radio",
+    "url": "https://xmplaylist.com/station/metoperaradio",
+    "id": "metoperaradio",
+    "number": 744,
+    "display_name": "744 - Met Opera Radio"
+  },
+  {
+    "name": "745 - SiriusXM Pops",
+    "url": "https://xmplaylist.com/station/siriusxmpops",
+    "id": "siriusxmpops",
+    "number": 745,
+    "display_name": "745 - SiriusXM Pops"
+  },
+  {
+    "name": "746 - Spa",
+    "url": "https://xmplaylist.com/station/spa",
+    "id": "spa",
+    "number": 746,
+    "display_name": "746 - Spa"
+  },
+  {
+    "name": "754 - Poplandia",
+    "url": "https://xmplaylist.com/station/poplandia",
+    "id": "poplandia",
+    "number": 754,
+    "display_name": "754 - Poplandia"
+  },
+  {
+    "name": "757 - The Tragically Hip Radio",
+    "url": "https://xmplaylist.com/station/thetragicallyhipradio",
+    "id": "thetragicallyhipradio",
+    "number": 757,
+    "display_name": "757 - The Tragically Hip Radio"
+  },
+  {
+    "name": "758 - Iceberg",
+    "url": "https://xmplaylist.com/station/iceberg",
+    "id": "iceberg",
+    "number": 758,
+    "display_name": "758 - Iceberg"
+  },
+  {
+    "name": "759 - Les Tubes Franco",
+    "url": "https://xmplaylist.com/station/lestubesfranco",
+    "id": "lestubesfranco",
+    "number": 759,
+    "display_name": "759 - Les Tubes Franco"
+  },
+  {
+    "name": "760 - Chucho's Cuba & Beyond",
+    "url": "https://xmplaylist.com/station/chuchoscubabeyond",
+    "id": "chuchoscubabeyond",
+    "number": 760,
+    "display_name": "760 - Chucho's Cuba & Beyond"
+  },
+  {
+    "name": "761 - Celia Cruz AZ\u00daCAR!",
+    "url": "https://xmplaylist.com/station/celiacruzazucar",
+    "id": "celiacruzazucar",
+    "number": 761,
+    "display_name": "761 - Celia Cruz AZ\u00daCAR!"
+  },
+  {
+    "name": "762 - Caricia",
+    "url": "https://xmplaylist.com/station/caricia",
+    "id": "caricia",
+    "number": 762,
+    "display_name": "762 - Caricia"
+  },
+  {
+    "name": "763 - Viva",
+    "url": "https://xmplaylist.com/station/viva",
+    "id": "viva",
+    "number": 763,
+    "display_name": "763 - Viva"
+  },
+  {
+    "name": "764 - Latidos",
+    "url": "https://xmplaylist.com/station/latidos",
+    "id": "latidos",
+    "number": 764,
+    "display_name": "764 - Latidos"
+  },
+  {
+    "name": "765 - Flow Naci\u00f3n",
+    "url": "https://xmplaylist.com/station/flownacion",
+    "id": "flownacion",
+    "number": 765,
+    "display_name": "765 - Flow Naci\u00f3n"
+  },
+  {
+    "name": "766 - Luna",
+    "url": "https://xmplaylist.com/station/luna",
+    "id": "luna",
+    "number": 766,
+    "display_name": "766 - Luna"
+  },
+  {
+    "name": "767 - Rumb\u00f3n",
+    "url": "https://xmplaylist.com/station/rumbonmusic",
+    "id": "rumbonmusic",
+    "number": 767,
+    "display_name": "767 - Rumb\u00f3n"
+  },
+  {
+    "name": "768 - La Kueva",
+    "url": "https://xmplaylist.com/station/lakueva",
+    "id": "lakueva",
+    "number": 768,
+    "display_name": "768 - La Kueva"
+  },
+  {
+    "name": "771 - She's So Funny",
+    "url": "https://xmplaylist.com/station/shessofunny",
+    "id": "shessofunny",
+    "number": 771,
+    "display_name": "771 - She's So Funny"
+  },
+  {
+    "name": "772 - Comedy Classics",
+    "url": "https://xmplaylist.com/station/comedyclassics",
+    "id": "comedyclassics",
+    "number": 772,
+    "display_name": "772 - Comedy Classics"
+  },
+  {
+    "name": "796 - SiriusXM Dhamaka",
+    "url": "https://xmplaylist.com/station/siriusxmdhamaka",
+    "id": "siriusxmdhamaka",
+    "number": 796,
+    "display_name": "796 - SiriusXM Dhamaka"
+  }
+]
