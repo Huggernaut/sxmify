@@ -19,14 +19,25 @@
         <form action="{{ url_for('scrape') }}" method="POST" id="scrape-form">
             <input type="hidden" id="station_name" name="station_name" value="">
             <div class="form-group">
-                <label for="url">Select Station</label>
-                <select id="url" name="url" required>
-                    {% for station in stations %}
-                    <option value="{{ station.url }}">
-                        {{ station.name }}
-                    </option>
-                    {% endfor %}
-                </select>
+                <label for="station-search">Select Station</label>
+                <div class="custom-select-wrapper">
+                    <!-- Hidden input for form submission -->
+                    <input type="hidden" id="url" name="url" required>
+
+                    <!-- Visible Input for typing/searching -->
+                    <input type="text" id="station-search" placeholder="Select or search for a station..."
+                        autocomplete="off">
+
+                    <!-- Dropdown List -->
+                    <div id="station-options" class="station-options hidden">
+                        {% for station in stations %}
+                        <div class="station-option" data-value="{{ station.url }}"
+                            data-sort="{{ '%05d'|format(station.number|int) }}" data-name="{{ station.name }}">
+                            {{ station.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -56,20 +67,86 @@
     </div>
 
     <script>
-        const btn = document.getElementById('scrape-btn');
-        if (btn) {
-            btn.addEventListener('click', function () {
-                // Set station name before submit
-                const select = document.getElementById('url');
-                const nameInput = document.getElementById('station_name');
-                if (select && select.selectedIndex >= 0) {
-                    nameInput.value = select.options[select.selectedIndex].text.trim();
-                }
+        // Custom Searchable Dropdown Logic
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('station-search');
+            const optionsContainer = document.getElementById('station-options');
+            const hiddenInput = document.getElementById('url');
+            const options = Array.from(document.querySelectorAll('.station-option'));
 
-                this.innerHTML = 'Finding Tracks... (this may take a few seconds)';
-                this.classList.add('disabled');
+            // 1. Initial Sort
+            options.sort((a, b) => {
+                return a.dataset.sort.localeCompare(b.dataset.sort);
             });
-        }
+            // Re-append in order
+            options.forEach(opt => optionsContainer.appendChild(opt));
+
+            // 2. Toggle Dropdown
+            function showDropdown() {
+                optionsContainer.classList.remove('hidden');
+            }
+
+            function hideDropdown() {
+                // Small delay to allow click event to register
+                setTimeout(() => {
+                    optionsContainer.classList.add('hidden');
+                }, 200);
+            }
+
+            searchInput.addEventListener('focus', showDropdown);
+            searchInput.addEventListener('input', function () {
+                showDropdown();
+                const filter = this.value.toLowerCase();
+                options.forEach(opt => {
+                    const text = opt.innerText.toLowerCase();
+                    if (text.includes(filter)) {
+                        opt.style.display = 'block';
+                    } else {
+                        opt.style.display = 'none';
+                    }
+                });
+            });
+
+            // Hide when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!searchInput.contains(e.target) && !optionsContainer.contains(e.target)) {
+                    optionsContainer.classList.add('hidden');
+                }
+            });
+
+            // 3. Selection
+            options.forEach(opt => {
+                opt.addEventListener('click', function () {
+                    searchInput.value = this.dataset.name;
+                    hiddenInput.value = this.dataset.value;
+                    optionsContainer.classList.add('hidden');
+                });
+            });
+
+            // Check if we already have a value (e.g. from session/browser cache)?
+            // Not strictly needed since we start empty, but good validation.
+
+            // Submit Button Logic
+            const btn = document.getElementById('scrape-btn');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    // Set station name before submit (though we use ID for that in backend usually)
+                    const nameInput = document.getElementById('station_name');
+                    if (nameInput && searchInput.value) {
+                        nameInput.value = searchInput.value;
+                    }
+
+                    // Simple validation
+                    if (!hiddenInput.value) {
+                        alert("Please select a station from the list.");
+                        return;
+                    }
+
+                    this.innerHTML = 'Finding Tracks... (this may take a few seconds)';
+                    this.classList.add('disabled');
+                });
+            }
+        });
 
         const scrapeType = document.getElementById('scrape_type');
         const daysGroup = document.getElementById('days_group');
