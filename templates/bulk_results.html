@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Update Results - Sxmify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        .result-table th {
+            color: #b3b3b3;
+            font-weight: normal;
+        }
+
+        .status-success {
+            color: var(--primary-color);
+        }
+
+        .status-error {
+            color: var(--error-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" style="max-width: 800px;">
+        <h1>Bulk Update Complete</h1>
+
+        <p>Processed {{ results|length }} stations.</p>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Station</th>
+                    <th>Status</th>
+                    <th>Tracks</th>
+                    <th>Playlist</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in results %}
+                <tr>
+                    <td>{{ res.station_name }}</td>
+                    <td>
+                        {% if res.success %}
+                        <span class="status-success">Success</span>
+                        {% else %}
+                        <span class="status-error">Error</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ res.track_count }}</td>
+                    <td>
+                        {% if res.playlist_url %}
+                        <a href="{{ res.playlist_url }}" target="_blank"
+                            style="color: white; text-decoration: underline;">Open Spotify</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                        {% if res.error %}
+                        <br><small style="color: #ff6666;">{{ res.error }}</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{{ url_for('index') }}" class="btn primary-btn">Back to Home</a>
+        <br>
+        <a href="{{ url_for('bulk_select') }}" class="secondary-btn">Update More</a>
+    </div>
+</body>
+
+</html>

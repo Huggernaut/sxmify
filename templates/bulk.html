@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Update - Sxmify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .station-list {
+            text-align: left;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            background-color: #2e2e2e;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .station-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .station-item:last-child {
+            border-bottom: none;
+        }
+
+        .station-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .station-item label {
+            cursor: pointer;
+            margin-bottom: 0;
+            color: #fff;
+            flex-grow: 1;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .controls button {
+            background: none;
+            border: none;
+            color: #b3b3b3;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        .controls button:hover {
+            color: #fff;
+        }
+
+        .search-box {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" style="max-width: 600px;">
+        <h1>Bulk Playlist Update</h1>
+
+        <div class="search-box">
+            <input type="text" id="station-filter" placeholder="Filter stations...">
+        </div>
+
+        <form action="{{ url_for('bulk_export') }}" method="POST" id="bulk-form">
+            <div class="controls">
+                <div>
+                    <button type="button" id="select-all">Select All</button>
+                    <button type="button" id="deselect-all">Deselect All</button>
+                </div>
+                <span id="selected-count">0 selected</span>
+            </div>
+
+            <div class="station-list" id="station-list">
+                {% for station in stations %}
+                <div class="station-item">
+                    <input type="checkbox" name="station_urls" value="{{ station.url }}" id="st-{{ loop.index }}"
+                        data-name="{{ station.name }}">
+                    <input type="hidden" name="station_names" value="{{ station.name }}" disabled>
+                    <!-- Enabled via JS on submit if needed, or lookup on backend -->
+                    <label for="st-{{ loop.index }}">{{ station.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="scrape_type">Playlist Type</label>
+                <select id="scrape_type" name="scrape_type">
+                    <option value="recent">Recently Played</option>
+                    <option value="newest">Newest Additions</option>
+                    <option value="most_heard">Most Played</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="days_group" style="display: none;">
+                <label for="days">Time Period</label>
+                <select id="days" name="days">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="60">Last 60 Days</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn primary-btn" id="update-btn">Update Selected Playlists</button>
+            <a href="{{ url_for('index') }}" class="secondary-btn">Back to Home</a>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterInput = document.getElementById('station-filter');
+            const stationItems = document.querySelectorAll('.station-item');
+            const selectAllBtn = document.getElementById('select-all');
+            const deselectAllBtn = document.getElementById('deselect-all');
+            const countSpan = document.getElementById('selected-count');
+            const updateBtn = document.getElementById('update-btn');
+
+            // Filter logic
+            filterInput.addEventListener('input', function () {
+                const filter = this.value.toLowerCase();
+                stationItems.forEach(item => {
+                    const label = item.querySelector('label').innerText.toLowerCase();
+                    if (label.includes(filter)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+
+            // Selection Logic
+            function updateCount() {
+                const checked = document.querySelectorAll('input[name="station_urls"]:checked').length;
+                countSpan.innerText = `${checked} selected`;
+                if (checked > 0) {
+                    updateBtn.classList.remove('disabled');
+                } else {
+                    updateBtn.classList.add('disabled'); // Optional: disable if none selected
+                }
+            }
+
+            selectAllBtn.addEventListener('click', function () {
+                // Only select visible items if filtering? Or all? Usually visible feels more natural if filtered.
+                // Let's do visible only if filtered, or all if not.
+                stationItems.forEach(item => {
+                    if (item.style.display !== 'none') {
+                        item.querySelector('input[type="checkbox"]').checked = true;
+                    }
+                });
+                updateCount();
+            });
+
+            deselectAllBtn.addEventListener('click', function () {
+                stationItems.forEach(item => {
+                    item.querySelector('input[type="checkbox"]').checked = false;
+                });
+                updateCount();
+            });
+
+            stationItems.forEach(item => {
+                item.querySelector('input[type="checkbox"]').addEventListener('change', updateCount);
+            });
+
+            // Initial count
+            updateCount();
+
+            // Type/Days toggle (copied from index)
+            const scrapeType = document.getElementById('scrape_type');
+            const daysGroup = document.getElementById('days_group');
+
+            if (scrapeType && daysGroup) {
+                scrapeType.addEventListener('change', function () {
+                    daysGroup.style.display = 'none';
+                    if (this.value === 'most_heard') {
+                        daysGroup.style.display = 'block';
+                    }
+                });
+            }
+
+            // Submit loading
+            document.getElementById('bulk-form').addEventListener('submit', function () {
+                updateBtn.innerHTML = 'Updating... (This may take a while)';
+                updateBtn.classList.add('disabled');
+            });
+        });
+    </script>
+</body>
+
+</html>
