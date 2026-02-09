@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from scraper import scrape_tracks, get_stations
 from spotify_client import create_playlist_and_add_tracks
 
-load_dotenv()
+load_dotenv(override=True)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
@@ -16,10 +16,11 @@ app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 # Configuration
 SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 SPOTIPY_CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
-SPOTIPY_REDIRECT_URI = "https://sxmify.onrender.com/callback" 
+SPOTIPY_REDIRECT_URI = os.environ.get("SPOTIPY_REDIRECT_URI", "https://localhost:5000/callback") 
 # User must update Dashboard to this URI or use the one they configured.
 
 def create_spotify_oauth():
+    print(f"DEBUG: Using Redirect URI: {SPOTIPY_REDIRECT_URI}")
     return SpotifyOAuth(
         client_id=SPOTIPY_CLIENT_ID,
         client_secret=SPOTIPY_CLIENT_SECRET,
@@ -45,6 +46,8 @@ def login():
     # Check if we should return to review page
     if request.args.get('next') == 'review':
         session['return_to_review'] = True
+    elif request.args.get('next') == 'bulk':
+        session['return_to_bulk'] = True
         
     return redirect(auth_url)
 
@@ -70,6 +73,10 @@ def callback():
     if session.get('return_to_review') and session.get('last_scrape'):
          session.pop('return_to_review', None)
          return redirect(url_for('show_review'))
+    
+    if session.get('return_to_bulk'):
+        session.pop('return_to_bulk', None)
+        return redirect(url_for('bulk_select'))
 
     # Check for pending export
     pending_export = session.get('pending_export')
@@ -287,6 +294,92 @@ def finish_export(token_info, export_data):
     except spotipy.exceptions.SpotifyException as e:
          return render_template('index.html', error=f"Spotify Error: {e}")
 
+@app.route('/bulk')
+def bulk_select():
+    stations = get_stations()
+    return render_template('bulk.html', stations=stations)
+
+@app.route('/bulk_export', methods=['POST'])
+def bulk_export():
+    # Check login
+    token_info = session.get('token_info', None)
+    if not token_info:
+        return redirect(url_for('login', next='bulk'))
+
+    sp_oauth = create_spotify_oauth()
+    if sp_oauth.is_token_expired(token_info):
+        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+        session['token_info'] = token_info
+
+    sp = spotipy.Spotify(auth=token_info['access_token'])
+
+    station_urls = request.form.getlist('station_urls')
+    scrape_type = request.form.get('scrape_type', 'recent')
+    days = request.form.get('days', '7')
+    limit = 100 
+    
+    # Pre-fetch stations for name lookup
+    all_stations = get_stations()
+    station_map = {s['url']: s['name'] for s in all_stations}
+    
+    results = []
+    print(f"Starting bulk update for {len(station_urls)} stations...")
+    
+    for url in station_urls:
+         station_name = station_map.get(url, "Unknown Station")
+         
+         res = {
+             'station_name': station_name,
+             'success': False,
+             'track_count': 0,
+             'playlist_url': None,
+             'error': None
+         }
+         
+         try:
+             # 1. Scrape
+             target_url = url
+             if scrape_type == 'newest':
+                 target_url = f"{url}/newest"
+             elif scrape_type == 'most_heard':
+                 target_url = f"{url}/most-heard?days={days}"
+             
+             print(f"Bulk scraping: {target_url}")
+             tracks = scrape_tracks(target_url, limit=limit)
+             
+             if not tracks:
+                 res['error'] = "No tracks found"
+                 results.append(res)
+                 continue
+                 
+             track_ids = [t['id'] for t in tracks]
+             res['track_count'] = len(track_ids)
+             
+             # 2. Extract station_id for naming
+             station_id = "unknown"
+             try:
+                parts = url.rstrip('/').split('/')
+                if 'station' in parts:
+                    station_id = parts[parts.index('station') + 1]
+             except:
+                 pass
+
+             # 3. Create Playlist
+             playlist_url = create_playlist_and_add_tracks(
+                 sp, track_ids, station_id, scrape_type, days, station_name
+             )
+             
+             res['success'] = True
+             res['playlist_url'] = playlist_url
+             
+         except Exception as e:
+             print(f"Error processing {station_name}: {e}")
+             res['error'] = str(e)
+             
+         results.append(res)
+         
+    return render_template('bulk_results.html', results=results)
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -363,4 +456,4 @@ def debug_info():
     return "<br>".join(info)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=True, ssl_context='adhoc')
