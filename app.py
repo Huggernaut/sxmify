@@ -297,26 +297,53 @@ def finish_export(token_info, export_data):
 @app.route('/bulk')
 def bulk_select():
     stations = get_stations()
-    return render_template('bulk.html', stations=stations)
+    
+    # Check for saved bulk data (from a previous login attempt)
+    saved_data = session.get('saved_bulk_data', {})
+    selected_urls = saved_data.get('station_urls', [])
+    selected_scrape_type = saved_data.get('scrape_type', 'recent')
+    selected_days = saved_data.get('days', '7')
+    
+    # Optional: Clear the saved data so it doesn't persist forever
+    # session.pop('saved_bulk_data', None) 
+    # Decision: Keep it for now, let it be overwritten next time or expire with session.
+    # It's less annoying if they navigate away and back.
+    
+    return render_template('bulk.html', 
+                           stations=stations,
+                           selected_urls=selected_urls,
+                           selected_scrape_type=selected_scrape_type,
+                           selected_days=selected_days)
 
 @app.route('/bulk_export', methods=['POST'])
 def bulk_export():
-    # Check login
+    # 1. Capture Form Data Immediately
+    station_urls = request.form.getlist('station_urls')
+    scrape_type = request.form.get('scrape_type', 'recent')
+    days = request.form.get('days', '7')
+    limit = 100 
+
+    # 2. Check Login
     token_info = session.get('token_info', None)
     if not token_info:
+        # Save state to session
+        session['saved_bulk_data'] = {
+            'station_urls': station_urls,
+            'scrape_type': scrape_type,
+            'days': days
+        }
         return redirect(url_for('login', next='bulk'))
 
+    # Check token expiration
     sp_oauth = create_spotify_oauth()
     if sp_oauth.is_token_expired(token_info):
         token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
         session['token_info'] = token_info
 
     sp = spotipy.Spotify(auth=token_info['access_token'])
-
-    station_urls = request.form.getlist('station_urls')
-    scrape_type = request.form.get('scrape_type', 'recent')
-    days = request.form.get('days', '7')
-    limit = 100 
+    
+    # Cleanup saved data if we are proceeding successfully
+    session.pop('saved_bulk_data', None) 
     
     # Pre-fetch stations for name lookup
     all_stations = get_stations()
