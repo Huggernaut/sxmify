@@ -16,7 +16,7 @@ app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 # Configuration
 SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 SPOTIPY_CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
-SPOTIPY_REDIRECT_URI = os.environ.get("SPOTIPY_REDIRECT_URI", "https://localhost:5000/callback") 
+SPOTIPY_REDIRECT_URI = os.environ.get("SPOTIPY_REDIRECT_URI", "https://sxmify.vercel.app/callback") 
 # User must update Dashboard to this URI or use the one they configured.
 
 def create_spotify_oauth():
