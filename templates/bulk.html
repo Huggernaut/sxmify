@@ -68,145 +68,171 @@
 </head>
 
 <body>
-    <div class="container" style="max-width: 600px;">
-        <h1>Bulk Playlist Update</h1>
+    <div style="width: 100%; max-width: 600px; display: flex; flex-direction: column;">
+        <div class="container" style="max-width: 100%; width: 100%; box-sizing: border-box;">
+            <h1 style="margin: 0 0 1rem 0; font-size: 1.5rem; text-align: center;">Bulk Update</h1>
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 2rem;">
+                {% if is_logged_in %}
+                <div style="display: flex; align-items: center;">
+                    {% if user_image_url %}
+                    <img src="{{ user_image_url }}" alt="Avatar"
+                        style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; object-fit: cover;">
+                    {% endif %}
+                    <span style="display: flex; align-items: center; margin: 0;">
+                        <strong>{{ user_display_name or 'User' }}</strong>
+                        <span style="margin: 0 10px;">|</span>
+                        <a href="{{ url_for('logout') }}" class="text-link"
+                            style="font-size: 0.9em; margin: 0;">Logout</a>
+                    </span>
+                </div>
+                {% else %}
+                <div style="display: flex; align-items: center;">
+                    <a href="{{ url_for('login', next='bulk') }}" class="btn"
+                        style="background-color: #1DB954; color: white; padding: 5px 15px; font-size: 0.9em; text-decoration: none; border-radius: 4px; display: inline-block;">Login
+                        with Spotify</a>
+                </div>
+                {% endif %}
+            </div>
 
-        <div class="search-box">
-            <input type="text" id="station-filter" placeholder="Filter stations...">
+            <div class="search-box">
+                <input type="text" id="station-filter" placeholder="Filter stations...">
+            </div>
+
+            <div class="alert warning"
+                style="margin-bottom: 1rem; background-color: #584c24; color: #fff; padding: 10px; border-radius: 4px; border: 1px solid #8e7c3e;">
+                <strong>Note:</strong> Tends to break at 5-10 stations :(
+            </div>
+
+            <form action="{{ url_for('bulk_export') }}" method="POST" id="bulk-form">
+                <div class="controls">
+                    <div>
+                        <button type="button" id="select-all">Select All</button>
+                        <button type="button" id="deselect-all">Deselect All</button>
+                    </div>
+                    <span id="selected-count">0 selected</span>
+                </div>
+
+                <div class="station-list" id="station-list">
+                    {% for station in stations %}
+                    <div class="station-item">
+                        <input type="checkbox" name="station_urls" value="{{ station.url }}" id="st-{{ loop.index }}"
+                            data-name="{{ station.name }}" {% if station.url in selected_urls %}checked{% endif %}>
+                        <input type="hidden" name="station_names" value="{{ station.name }}" disabled>
+                        <!-- Enabled via JS on submit if needed, or lookup on backend -->
+                        <label for="st-{{ loop.index }}">{{ station.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="scrape_type">Playlist Type</label>
+                    <select id="scrape_type" name="scrape_type">
+                        <option value="recent" {% if selected_scrape_type=='recent' %}selected{% endif %}>Recently
+                            Played
+                        </option>
+                        <option value="newest" {% if selected_scrape_type=='newest' %}selected{% endif %}>Newest
+                            Additions
+                        </option>
+                        <option value="most_heard" {% if selected_scrape_type=='most_heard' %}selected{% endif %}>Most
+                            Played</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="days_group"
+                    style="{% if selected_scrape_type != 'most_heard' %}display: none;{% endif %}">
+                    <label for="days">Time Period</label>
+                    <select id="days" name="days">
+                        <option value="7" {% if selected_days=='7' %}selected{% endif %}>Last 7 Days</option>
+                        <option value="30" {% if selected_days=='30' %}selected{% endif %}>Last 30 Days</option>
+                        <option value="60" {% if selected_days=='60' %}selected{% endif %}>Last 60 Days</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn primary-btn" id="update-btn">Update Selected Playlists</button>
+                <a href="{{ url_for('index') }}" class="secondary-btn">Back to Home</a>
+            </form>
         </div>
 
-        <div class="alert warning"
-            style="margin-bottom: 1rem; background-color: #584c24; color: #fff; padding: 10px; border-radius: 4px; border: 1px solid #8e7c3e;">
-            <strong>Note:</strong> Tends to break at 5-10 stations :(
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const filterInput = document.getElementById('station-filter');
+                const stationItems = document.querySelectorAll('.station-item');
+                const selectAllBtn = document.getElementById('select-all');
+                const deselectAllBtn = document.getElementById('deselect-all');
+                const countSpan = document.getElementById('selected-count');
+                const updateBtn = document.getElementById('update-btn');
 
-        <form action="{{ url_for('bulk_export') }}" method="POST" id="bulk-form">
-            <div class="controls">
-                <div>
-                    <button type="button" id="select-all">Select All</button>
-                    <button type="button" id="deselect-all">Deselect All</button>
-                </div>
-                <span id="selected-count">0 selected</span>
-            </div>
+                // Filter logic
+                filterInput.addEventListener('input', function () {
+                    const filter = this.value.toLowerCase();
+                    stationItems.forEach(item => {
+                        const label = item.querySelector('label').innerText.toLowerCase();
+                        if (label.includes(filter)) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
 
-            <div class="station-list" id="station-list">
-                {% for station in stations %}
-                <div class="station-item">
-                    <input type="checkbox" name="station_urls" value="{{ station.url }}" id="st-{{ loop.index }}"
-                        data-name="{{ station.name }}" {% if station.url in selected_urls %}checked{% endif %}>
-                    <input type="hidden" name="station_names" value="{{ station.name }}" disabled>
-                    <!-- Enabled via JS on submit if needed, or lookup on backend -->
-                    <label for="st-{{ loop.index }}">{{ station.name }}</label>
-                </div>
-                {% endfor %}
-            </div>
+                // Selection Logic
+                function updateCount() {
+                    const checked = document.querySelectorAll('input[name="station_urls"]:checked').length;
+                    countSpan.innerText = `${checked} selected`;
 
-            <div class="form-group">
-                <label for="scrape_type">Playlist Type</label>
-                <select id="scrape_type" name="scrape_type">
-                    <option value="recent" {% if selected_scrape_type=='recent' %}selected{% endif %}>Recently Played
-                    </option>
-                    <option value="newest" {% if selected_scrape_type=='newest' %}selected{% endif %}>Newest Additions
-                    </option>
-                    <option value="most_heard" {% if selected_scrape_type=='most_heard' %}selected{% endif %}>Most
-                        Played</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="days_group"
-                style="{% if selected_scrape_type != 'most_heard' %}display: none;{% endif %}">
-                <label for="days">Time Period</label>
-                <select id="days" name="days">
-                    <option value="7" {% if selected_days=='7' %}selected{% endif %}>Last 7 Days</option>
-                    <option value="30" {% if selected_days=='30' %}selected{% endif %}>Last 30 Days</option>
-                    <option value="60" {% if selected_days=='60' %}selected{% endif %}>Last 60 Days</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn primary-btn" id="update-btn">Update Selected Playlists</button>
-            <a href="{{ url_for('index') }}" class="secondary-btn">Back to Home</a>
-        </form>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const filterInput = document.getElementById('station-filter');
-            const stationItems = document.querySelectorAll('.station-item');
-            const selectAllBtn = document.getElementById('select-all');
-            const deselectAllBtn = document.getElementById('deselect-all');
-            const countSpan = document.getElementById('selected-count');
-            const updateBtn = document.getElementById('update-btn');
-
-            // Filter logic
-            filterInput.addEventListener('input', function () {
-                const filter = this.value.toLowerCase();
-                stationItems.forEach(item => {
-                    const label = item.querySelector('label').innerText.toLowerCase();
-                    if (label.includes(filter)) {
-                        item.style.display = 'flex';
+                    if (checked > 0) {
+                        updateBtn.classList.remove('disabled');
                     } else {
-                        item.style.display = 'none';
+                        updateBtn.classList.add('disabled'); // Optional: disable if none selected
                     }
-                });
-            });
-
-            // Selection Logic
-            function updateCount() {
-                const checked = document.querySelectorAll('input[name="station_urls"]:checked').length;
-                countSpan.innerText = `${checked} selected`;
-
-                if (checked > 0) {
-                    updateBtn.classList.remove('disabled');
-                } else {
-                    updateBtn.classList.add('disabled'); // Optional: disable if none selected
                 }
-            }
 
-            selectAllBtn.addEventListener('click', function () {
-                // Only select visible items if filtering? Or all? Usually visible feels more natural if filtered.
-                // Let's do visible only if filtered, or all if not.
+                selectAllBtn.addEventListener('click', function () {
+                    // Only select visible items if filtering? Or all? Usually visible feels more natural if filtered.
+                    // Let's do visible only if filtered, or all if not.
+                    stationItems.forEach(item => {
+                        if (item.style.display !== 'none') {
+                            item.querySelector('input[type="checkbox"]').checked = true;
+                        }
+                    });
+                    updateCount();
+                });
+
+                deselectAllBtn.addEventListener('click', function () {
+                    stationItems.forEach(item => {
+                        item.querySelector('input[type="checkbox"]').checked = false;
+                    });
+                    updateCount();
+                });
+
                 stationItems.forEach(item => {
-                    if (item.style.display !== 'none') {
-                        item.querySelector('input[type="checkbox"]').checked = true;
-                    }
+                    item.querySelector('input[type="checkbox"]').addEventListener('change', updateCount);
                 });
+
+                // Initial count
                 updateCount();
-            });
 
-            deselectAllBtn.addEventListener('click', function () {
-                stationItems.forEach(item => {
-                    item.querySelector('input[type="checkbox"]').checked = false;
+                // Type/Days toggle (copied from index)
+                const scrapeType = document.getElementById('scrape_type');
+                const daysGroup = document.getElementById('days_group');
+
+                if (scrapeType && daysGroup) {
+                    scrapeType.addEventListener('change', function () {
+                        daysGroup.style.display = 'none';
+                        if (this.value === 'most_heard') {
+                            daysGroup.style.display = 'block';
+                        }
+                    });
+                }
+
+                // Submit loading
+                document.getElementById('bulk-form').addEventListener('submit', function () {
+                    updateBtn.innerHTML = 'Updating... (This may take a while)';
+                    updateBtn.classList.add('disabled');
                 });
-                updateCount();
             });
-
-            stationItems.forEach(item => {
-                item.querySelector('input[type="checkbox"]').addEventListener('change', updateCount);
-            });
-
-            // Initial count
-            updateCount();
-
-            // Type/Days toggle (copied from index)
-            const scrapeType = document.getElementById('scrape_type');
-            const daysGroup = document.getElementById('days_group');
-
-            if (scrapeType && daysGroup) {
-                scrapeType.addEventListener('change', function () {
-                    daysGroup.style.display = 'none';
-                    if (this.value === 'most_heard') {
-                        daysGroup.style.display = 'block';
-                    }
-                });
-            }
-
-            // Submit loading
-            document.getElementById('bulk-form').addEventListener('submit', function () {
-                updateBtn.innerHTML = 'Updating... (This may take a while)';
-                updateBtn.classList.add('disabled');
-            });
-        });
-    </script>
+        </script>
+    </div>
 </body>
 
 </html>

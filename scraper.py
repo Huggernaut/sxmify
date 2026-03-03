@@ -6,17 +6,7 @@ import os
 
 from urllib.parse import urlparse, parse_qs
 
-def load_fallback_stations():
-    try:
-        path = os.path.join(os.path.dirname(__file__), 'stations.json')
-        print(f"Loading fallback stations from {path}...")
-        with open(path, 'r', encoding='utf-8') as f:
-            stations = json.load(f)
-            print(f"Loaded {len(stations)} stations from fallback.")
-            return stations
-    except Exception as e:
-        print(f"Error loading fallback: {e}")
-        return []
+
 
 def get_stations():
     # Scrape the station list from xmplaylist.com/station
@@ -28,7 +18,7 @@ def get_stations():
         response.raise_for_status()
     except Exception as e:
         print(f"Error fetching stations: {e}")
-        return load_fallback_stations()
+        return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
     stations = []
@@ -38,13 +28,27 @@ def get_stations():
     
     for link in links:
         href = link.get('href')
-        name = link.text.strip()
         station_id = href.split('/')[-1]
         
+        # Extract number from the div block with text-slate-500
+        # The number is usually in a div that is absolute positioned
+        number_div = link.find('div', class_=re.compile(r'absolute.*text-slate-500'))
+        number_text = number_div.text.strip() if number_div else ""
+        
+        # Extract name from the truncate div
+        name_div = link.find('div', class_='truncate')
+        raw_name = name_div.text.strip() if name_div else link.text.strip()
+        
+        # If we couldn't find the structure easily, fallback to raw text but we know it's a bit messy
+        if not number_text and not name_div:
+            # Fallback to older scraping logic base text
+            raw_name = link.text.strip()
+
         # Simple dedupe based on ID
         if not any(s['id'] == station_id for s in stations):
             stations.append({
-                'name': name,
+                'raw_name': raw_name,
+                'channel_num': number_text,
                 'url': f"https://xmplaylist.com{href}",
                 'id': station_id
             })
@@ -52,28 +56,24 @@ def get_stations():
     filtered_stations = []
 
     for station in stations:
-        match = re.match(r'^(\d+)(.*)', station['name'])
+        raw_name = station['raw_name']
+        channel_num = station['channel_num']
         
-        # Handle decades (e.g., 770s -> 7, 70s)
-        decade_match = re.match(r'^(\d)(\d0)(s\s.*)', station['name'])
-        
-        # Handle concatenated decades (e.g., 7140s -> 71 - 40s)
-        concat_decade_match = re.match(r'^(\d+)(00s|10s|20s|30s|40s|50s|60s|70s|80s|90s|2k|Pop2K)(.*)', station['name'], re.IGNORECASE)
-
-        if decade_match:
-             station['number'] = int(decade_match.group(1))
-             station['display_name'] = f"{decade_match.group(1)} - {decade_match.group(2)}{decade_match.group(3)}"
-             
-        elif concat_decade_match:
-             station['number'] = int(concat_decade_match.group(1))
-             station['display_name'] = f"{concat_decade_match.group(1)} - {concat_decade_match.group(2)}{concat_decade_match.group(3)}"
-             
-        elif match and int(match.group(1)) <= 999:
-            station['number'] = int(match.group(1))
-            station['display_name'] = f"{match.group(1)} - {match.group(2).strip()}"
+        # If we successfully parsed the channel_num from the HTML div
+        if channel_num.isdigit():
+            station['number'] = int(channel_num)
+            station['display_name'] = f"{channel_num} - {raw_name}"
         else:
-            station['number'] = 9999 # Put non-numbered at the end
-            station['display_name'] = station['name']
+            # Fallback for weird parsing or non-numbered stations
+            station['number'] = 9999
+            station['display_name'] = raw_name
+            
+        # Clean up keys
+        station['name'] = station['display_name']
+        if 'raw_name' in station:
+            del station['raw_name']
+        if 'channel_num' in station:
+            del station['channel_num']
             
         filtered_stations.append(station)
 
@@ -84,8 +84,8 @@ def get_stations():
         s['name'] = s['display_name']
         
     if not filtered_stations:
-        print("No stations found after scraping. Using fallback.")
-        return load_fallback_stations()
+        print("No stations found after scraping.")
+        return []
 
     return filtered_stations
 

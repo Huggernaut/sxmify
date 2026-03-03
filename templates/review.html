@@ -76,29 +76,34 @@
 <body>
     <div class="container" style="max-width: 600px;">
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <div>
-                {% if is_logged_in %}
-                <div style="display: flex; align-items: center;">
-                    {% if user_image_url %}
-                    <img src="{{ user_image_url }}" alt="Avatar"
-                        style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; object-fit: cover;">
-                    {% endif %}
-                    <p style="margin: 0;"><strong>{{ user_display_name or 'User' }}</strong></p>
-                    <span style="margin: 0 10px;">|</span>
-                    <a href="{{ url_for('logout') }}" class="text-link" style="font-size: 0.9em;">Logout</a>
-                </div>
-                {% else %}
-                <div style="display: flex; align-items: center;">
-                    <a href="{{ url_for('login', next='review') }}" class="text-link" style="font-size: 0.9em;">Login</a>
-                </div>
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <h1 style="margin: 0 0 5px 0; font-size: 1.5rem;">Review Tracks</h1>
+            <p style="color: #b3b3b3; margin: 0; font-size: 0.9em;">{{ station_name or station_id|title }} •
+                {{ scrape_description }}</p>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 2rem;">
+            {% if is_logged_in %}
+            <div style="display: flex; align-items: center;">
+                {% if user_image_url %}
+                <img src="{{ user_image_url }}" alt="Avatar"
+                    style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; object-fit: cover;">
                 {% endif %}
+                <span style="display: flex; align-items: center; margin: 0;">
+                    <strong>{{ user_display_name or 'User' }}</strong>
+                    <span style="margin: 0 10px;">|</span>
+                    <a href="{{ url_for('logout') }}" class="text-link" style="font-size: 0.9em; margin: 0;">Logout</a>
+                </span>
             </div>
+            {% else %}
+            <div style="display: flex; align-items: center;">
+                <a href="{{ url_for('login', next='review') }}" class="btn"
+                    style="background-color: #1DB954; color: white; padding: 5px 15px; font-size: 0.9em; text-decoration: none; border-radius: 4px; display: inline-block;">Login
+                    with Spotify</a>
+            </div>
+            {% endif %}
         </div>
 
-        <h1>Review Tracks: {{ station_name or station_id|title }}</h1>
-        <p style="color: #b3b3b3; margin-top: -10px;">{{ scrape_description }}</p>
-        <p>Found <strong>{{ tracks|length }}</strong> tracks.</p>
+        <p style="text-align: left;">Found <strong>{{ tracks|length }}</strong> tracks.</p>
 
         <form action="{{ url_for('export') }}" method="POST">
             <div class="actions-bar">

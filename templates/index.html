@@ -9,166 +9,190 @@
 </head>
 
 <body>
-    <div class="container">
-        <h1>Sxmify</h1>
+    <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column;">
+        <div class="container" style="max-width: 100%; width: 100%; box-sizing: border-box;">
+            <h1 style="margin: 0 0 1rem 0; text-align: center;">Sxmify</h1>
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 2rem;">
+                {% if is_logged_in %}
+                <div style="display: flex; align-items: center;">
+                    {% if user_image_url %}
+                    <img src="{{ user_image_url }}" alt="Avatar"
+                        style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; object-fit: cover;">
+                    {% endif %}
+                    <span style="display: flex; align-items: center; margin: 0;">
+                        <strong>{{ user_display_name or 'User' }}</strong>
+                        <span style="margin: 0 10px;">|</span>
+                        <a href="{{ url_for('logout') }}" class="text-link"
+                            style="font-size: 0.9em; margin: 0;">Logout</a>
+                    </span>
+                </div>
+                {% else %}
+                <div style="display: flex; align-items: center;">
+                    <a href="{{ url_for('login') }}" class="btn"
+                        style="background-color: #1DB954; color: white; padding: 5px 15px; font-size: 0.9em; text-decoration: none; border-radius: 4px; display: inline-block;">Login
+                        with Spotify</a>
+                </div>
+                {% endif %}
+            </div>
 
-        {% if error %}
-        <div class="alert error">{{ error }}</div>
-        {% endif %}
+            <form action="{{ url_for('scrape') }}" method="POST" id="scrape-form">
+                <input type="hidden" id="station_name" name="station_name" value="">
+                <div class="form-group">
+                    <label for="station-search">Select Station</label>
+                    <div class="custom-select-wrapper">
+                        <!-- Hidden input for form submission -->
+                        <input type="hidden" id="url" name="url" required>
 
-        <form action="{{ url_for('scrape') }}" method="POST" id="scrape-form">
-            <input type="hidden" id="station_name" name="station_name" value="">
-            <div class="form-group">
-                <label for="station-search">Select Station</label>
-                <div class="custom-select-wrapper">
-                    <!-- Hidden input for form submission -->
-                    <input type="hidden" id="url" name="url" required>
+                        <!-- Visible Input for typing/searching -->
+                        <input type="text" id="station-search" placeholder="Select or search for a station..."
+                            autocomplete="off">
 
-                    <!-- Visible Input for typing/searching -->
-                    <input type="text" id="station-search" placeholder="Select or search for a station..."
-                        autocomplete="off">
-
-                    <!-- Dropdown List -->
-                    <div id="station-options" class="station-options hidden">
-                        {% for station in stations %}
-                        <div class="station-option" data-value="{{ station.url }}"
-                            data-sort="{{ '%05d'|format(station.number|int) }}" data-name="{{ station.name }}">
-                            {{ station.name }}
+                        <!-- Dropdown List -->
+                        <div id="station-options" class="station-options hidden">
+                            {% for station in stations %}
+                            <div class="station-option" data-value="{{ station.url }}"
+                                data-sort="{{ '%05d'|format(station.number|int) }}" data-name="{{ station.name }}">
+                                {{ station.name }}
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="scrape_type">Playlist Type</label>
-                <select id="scrape_type" name="scrape_type">
-                    <option value="recent">Recently Played</option>
-                    <option value="newest">Newest Additions</option>
-                    <option value="most_heard">Most Played</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="scrape_type">Playlist Type</label>
+                    <select id="scrape_type" name="scrape_type">
+                        <option value="recent">Recently Played</option>
+                        <option value="newest">Newest Additions</option>
+                        <option value="most_heard">Most Played</option>
+                    </select>
+                </div>
 
-            <div class="form-group" id="days_group" style="display: none;">
-                <label for="days">Time Period</label>
-                <select id="days" name="days">
-                    <option value="7">Last 7 Days</option>
-                    <option value="30">Last 30 Days</option>
-                    <option value="60">Last 60 Days</option>
-                </select>
-            </div>
+                <div class="form-group" id="days_group" style="display: none;">
+                    <label for="days">Time Period</label>
+                    <select id="days" name="days">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="60">Last 60 Days</option>
+                    </select>
+                </div>
 
-            <div class="form-group" id="limit_group">
-                <label for="limit">Max Tracks</label>
-                <input type="number" id="limit" name="limit" value="100" min="1" max="500">
+                <div class="form-group" id="limit_group">
+                    <label for="limit">Max Tracks</label>
+                    <input type="number" id="limit" name="limit" value="100" min="1" max="500">
+                </div>
+                <button type="submit" class="btn primary-btn" id="scrape-btn">Find Tracks</button>
+            </form>
+            <div style="margin-top: 15px;">
+                <a href="{{ url_for('bulk_select') }}" class="text-link">Bulk Update</a>
             </div>
-            <button type="submit" class="btn primary-btn" id="scrape-btn">Find Tracks</button>
-        </form>
-        <div style="margin-top: 15px;">
-            <a href="{{ url_for('bulk_select') }}" class="text-link">Bulk Update</a>
         </div>
-    </div>
 
-    <script>
-        // Custom Searchable Dropdown Logic
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('station-search');
-            const optionsContainer = document.getElementById('station-options');
-            const hiddenInput = document.getElementById('url');
-            const options = Array.from(document.querySelectorAll('.station-option'));
+        <script>
+            // Custom Searchable Dropdown Logic
+            document.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('station-search');
+                const optionsContainer = document.getElementById('station-options');
+                const hiddenInput = document.getElementById('url');
+                const options = Array.from(document.querySelectorAll('.station-option'));
 
-            // 1. Initial Sort
-            options.sort((a, b) => {
-                return a.dataset.sort.localeCompare(b.dataset.sort);
-            });
-            // Re-append in order
-            options.forEach(opt => optionsContainer.appendChild(opt));
+                // 1. Initial Sort
+                options.sort((a, b) => {
+                    return a.dataset.sort.localeCompare(b.dataset.sort);
+                });
+                // Re-append in order
+                options.forEach(opt => optionsContainer.appendChild(opt));
 
-            // 2. Toggle Dropdown
-            function showDropdown() {
-                optionsContainer.classList.remove('hidden');
-            }
+                // 2. Toggle Dropdown
+                function showDropdown() {
+                    optionsContainer.classList.remove('hidden');
+                }
 
-            function hideDropdown() {
-                // Small delay to allow click event to register
-                setTimeout(() => {
-                    optionsContainer.classList.add('hidden');
-                }, 200);
-            }
+                function hideDropdown() {
+                    // Small delay to allow click event to register
+                    setTimeout(() => {
+                        optionsContainer.classList.add('hidden');
+                    }, 200);
+                }
 
-            searchInput.addEventListener('focus', showDropdown);
-            searchInput.addEventListener('input', function () {
-                showDropdown();
-                const filter = this.value.toLowerCase();
+                searchInput.addEventListener('focus', showDropdown);
+                searchInput.addEventListener('input', function () {
+                    showDropdown();
+                    const filter = this.value.toLowerCase();
+                    options.forEach(opt => {
+                        const text = opt.innerText.toLowerCase();
+                        if (text.includes(filter)) {
+                            opt.style.display = 'block';
+                        } else {
+                            opt.style.display = 'none';
+                        }
+                    });
+                });
+
+                // Hide when clicking outside
+                document.addEventListener('click', function (e) {
+                    if (!searchInput.contains(e.target) && !optionsContainer.contains(e.target)) {
+                        optionsContainer.classList.add('hidden');
+                    }
+                });
+
+                // 3. Selection
                 options.forEach(opt => {
-                    const text = opt.innerText.toLowerCase();
-                    if (text.includes(filter)) {
-                        opt.style.display = 'block';
-                    } else {
-                        opt.style.display = 'none';
-                    }
+                    opt.addEventListener('click', function () {
+                        searchInput.value = this.dataset.name;
+                        hiddenInput.value = this.dataset.value;
+                        optionsContainer.classList.add('hidden');
+                    });
                 });
-            });
 
-            // Hide when clicking outside
-            document.addEventListener('click', function (e) {
-                if (!searchInput.contains(e.target) && !optionsContainer.contains(e.target)) {
-                    optionsContainer.classList.add('hidden');
+                // Check if we already have a value (e.g. from session/browser cache)?
+                // Not strictly needed since we start empty, but good validation.
+
+                // Submit Form Logic
+                const form = document.getElementById('scrape-form');
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        // Simple validation
+                        if (!hiddenInput.value) {
+                            e.preventDefault();
+                            alert("Please select a station from the list.");
+                            return;
+                        }
+
+                        // Set station name before submit (though we use ID for that in backend usually)
+                        const nameInput = document.getElementById('station_name');
+                        if (nameInput && searchInput.value) {
+                            nameInput.value = searchInput.value;
+                        }
+
+                        const btn = document.getElementById('scrape-btn');
+                        if (btn) {
+                            btn.innerHTML = 'Finding Tracks... (this may take a few seconds)';
+                            btn.classList.add('disabled');
+                        }
+                    });
                 }
             });
 
-            // 3. Selection
-            options.forEach(opt => {
-                opt.addEventListener('click', function () {
-                    searchInput.value = this.dataset.name;
-                    hiddenInput.value = this.dataset.value;
-                    optionsContainer.classList.add('hidden');
-                });
-            });
+            const scrapeType = document.getElementById('scrape_type');
+            const daysGroup = document.getElementById('days_group');
+            const limitGroup = document.getElementById('limit_group');
 
-            // Check if we already have a value (e.g. from session/browser cache)?
-            // Not strictly needed since we start empty, but good validation.
+            if (scrapeType && daysGroup && limitGroup) {
+                scrapeType.addEventListener('change', function () {
+                    // Reset display
+                    daysGroup.style.display = 'none';
+                    limitGroup.style.display = 'none';
 
-            // Submit Button Logic
-            const btn = document.getElementById('scrape-btn');
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    // Set station name before submit (though we use ID for that in backend usually)
-                    const nameInput = document.getElementById('station_name');
-                    if (nameInput && searchInput.value) {
-                        nameInput.value = searchInput.value;
+                    if (this.value === 'most_heard') {
+                        daysGroup.style.display = 'block';
+                    } else if (this.value === 'recent') {
+                        limitGroup.style.display = 'block';
                     }
-
-                    // Simple validation
-                    if (!hiddenInput.value) {
-                        alert("Please select a station from the list.");
-                        return;
-                    }
-
-                    this.innerHTML = 'Finding Tracks... (this may take a few seconds)';
-                    this.classList.add('disabled');
                 });
             }
-        });
-
-        const scrapeType = document.getElementById('scrape_type');
-        const daysGroup = document.getElementById('days_group');
-        const limitGroup = document.getElementById('limit_group');
-
-        if (scrapeType && daysGroup && limitGroup) {
-            scrapeType.addEventListener('change', function () {
-                // Reset display
-                daysGroup.style.display = 'none';
-                limitGroup.style.display = 'none';
-
-                if (this.value === 'most_heard') {
-                    daysGroup.style.display = 'block';
-                } else if (this.value === 'recent') {
-                    limitGroup.style.display = 'block';
-                }
-            });
-        }
-    </script>
+        </script>
+    </div>
 </body>
 
 </html>

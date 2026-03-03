@@ -10,7 +10,10 @@ from spotify_client import create_playlist_and_add_tracks
 load_dotenv(override=True)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+if not app.secret_key:
+    # Use a secure random key if not provided (note: sessions will reset on app restart)
+    app.secret_key = os.urandom(24)
 app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 
 # Configuration
@@ -35,12 +38,14 @@ def create_spotify_oauth():
 @app.route('/')
 def index():
     stations = get_stations()
-    # Pass user info if logged in
-    user_display_name = None
-    if session.get('token_info'):
-        user_display_name = session.get('user_display_name')
+    is_logged_in = session.get('token_info') is not None
+    user_display_name = session.get('user_display_name') if is_logged_in else None
+    user_image_url = session.get('user_image_url') if is_logged_in else None
         
-    return render_template('index.html', stations=stations, user_display_name=user_display_name)
+    return render_template('index.html', stations=stations, 
+                           is_logged_in=is_logged_in,
+                           user_display_name=user_display_name,
+                           user_image_url=user_image_url)
 
 @app.route('/login')
 def login():
@@ -120,7 +125,7 @@ def scrape():
     print(f"DEBUG: base_url='{base_url}', scrape_type='{scrape_type}', days='{days}', limit={limit}")
 
     if not base_url:
-        return render_template('index.html', error="Please select a station.")
+        return render_template('index.html', error="Please select a station.", stations=get_stations(), user_display_name=session.get('user_display_name'))
     
     # Clean base_url
     base_url = base_url.rstrip('/')
@@ -141,7 +146,7 @@ def scrape():
     tracks = scrape_tracks(target_url, limit=limit)
     
     if not tracks:
-        return render_template('index.html', error="No tracks found on that page.")
+        return render_template('index.html', error="No tracks found on that page.", stations=get_stations(), user_display_name=session.get('user_display_name'))
 
     # Extract station_id from URL
     station_id = "unknown"
@@ -308,6 +313,10 @@ def bulk_select():
     selected_scrape_type = saved_data.get('scrape_type', 'recent')
     selected_days = saved_data.get('days', '7')
     
+    is_logged_in = session.get('token_info') is not None
+    user_display_name = session.get('user_display_name') if is_logged_in else None
+    user_image_url = session.get('user_image_url') if is_logged_in else None
+    
     # Optional: Clear the saved data so it doesn't persist forever
     # session.pop('saved_bulk_data', None) 
     # Decision: Keep it for now, let it be overwritten next time or expire with session.
@@ -317,7 +326,10 @@ def bulk_select():
                            stations=stations,
                            selected_urls=selected_urls,
                            selected_scrape_type=selected_scrape_type,
-                           selected_days=selected_days)
+                           selected_days=selected_days,
+                           is_logged_in=is_logged_in,
+                           user_display_name=user_display_name,
+                           user_image_url=user_image_url)
 
 @app.route('/bulk_export', methods=['POST'])
 def bulk_export():
@@ -433,11 +445,6 @@ def debug_info():
         files = os.listdir(current_dir)
         info.append(f"Files in Dir: {files}")
         
-        json_path = os.path.join(current_dir, 'stations.json')
-        info.append(f"stations.json exists: {os.path.exists(json_path)}")
-        if os.path.exists(json_path):
-             info.append(f"stations.json size: {os.path.getsize(json_path)} bytes")
-
     except Exception as e:
         info.append(f"File Error: {e}")
         
