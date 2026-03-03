@@ -428,6 +428,57 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+@app.route('/api/cron/update')
+def cron_update():
+    auth_header = request.headers.get('Authorization')
+    expected_secret = os.environ.get('CRON_SECRET')
+    
+    if not expected_secret or auth_header != f"Bearer {expected_secret}":
+        return {"error": "Unauthorized"}, 401
+    
+    # Allow station param, default to factionpunk
+    station_id = request.args.get('station', 'factionpunk')
+    
+    refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
+    if not refresh_token:
+        return {"error": "Missing SPOTIPY_REFRESH_TOKEN environment variable"}, 500
+        
+    try:
+        sp_oauth = create_spotify_oauth()
+        token_info = sp_oauth.refresh_access_token(refresh_token)
+        if not token_info:
+            return {"error": "Failed to refresh Spotify token"}, 500
+             
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        
+        url = f"https://xmplaylist.com/station/{station_id}"
+        tracks = scrape_tracks(url, limit=100)
+        
+        if not tracks:
+             return {"error": f"No tracks found for station {station_id}"}, 404
+             
+        track_ids = [t['id'] for t in tracks]
+        
+        # Get station name from the scraper if possible, otherwise format ID loosely
+        all_stations = get_stations()
+        station_url_suffix = f"/station/{station_id}"
+        station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), station_id.replace('-', ' ').title())
+        
+        playlist_url = create_playlist_and_add_tracks(
+            sp, track_ids, station_id, 'recent', None, station_name
+        )
+        
+        return {
+            "success": True, 
+            "station": station_name,
+            "playlist_url": playlist_url, 
+            "tracks_added": len(track_ids)
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
 @app.route('/debug')
 def debug_info():
     import os
