@@ -428,6 +428,27 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+@app.route('/token')
+def show_token():
+    token_info = session.get('token_info')
+    if not token_info:
+        return redirect(url_for('login', next='index'))
+        
+    refresh_token = token_info.get('refresh_token')
+    
+    html = f"""
+    <html>
+    <body style="font-family: sans-serif; padding: 2rem;">
+        <h2>Your Spotify Refresh Token</h2>
+        <p>To enable the Vercel Cron Job, you need to add this <strong>Refresh Token</strong> to your Vercel Environment Variables as <pre style="display:inline; background:#eee; padding:2px 4px;">SPOTIPY_REFRESH_TOKEN</pre></p>
+        <textarea style="width: 100%; height: 100px; font-family: monospace; padding: 10px;" readonly>{refresh_token}</textarea>
+        <br><br>
+        <a href="/">Back to App</a>
+    </body>
+    </html>
+    """
+    return html
+
 @app.route('/api/cron/update')
 def cron_update():
     auth_header = request.headers.get('Authorization')
