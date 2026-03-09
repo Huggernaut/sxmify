@@ -1,8 +1,12 @@
 {
     "crons": [
         {
-            "path": "/api/cron/update?station=factionpunk",
+            "path": "/api/cron/update?stations=radiomargaritaville,unwellmusic,lithium,siriusxmchill",
             "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron/update?stations=shade45,altnation,pop2k,siriusxmhits1,factionpunk",
+            "schedule": "30 0 * * *"
         }
     ]
 }

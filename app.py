@@ -26,13 +26,16 @@ else:
     SPOTIPY_REDIRECT_URI = raw_redirect_uri
 # User must update Dashboard to this URI or use the one they configured.
 
+from spotipy.cache_handler import MemoryCacheHandler
+
 def create_spotify_oauth():
     print(f"DEBUG: Using Redirect URI: {SPOTIPY_REDIRECT_URI}")
     return SpotifyOAuth(
         client_id=SPOTIPY_CLIENT_ID,
         client_secret=SPOTIPY_CLIENT_SECRET,
         redirect_uri=SPOTIPY_REDIRECT_URI,
-        scope="playlist-modify-public playlist-modify-private"
+        scope="playlist-modify-public playlist-modify-private",
+        cache_handler=MemoryCacheHandler()
     )
 
 @app.route('/')
@@ -458,7 +461,12 @@ def cron_update():
         return {"error": "Unauthorized"}, 401
     
     # Allow station param, default to factionpunk
-    station_id = request.args.get('station', 'factionpunk')
+    stations_param = request.args.get('stations')
+    if stations_param:
+        station_ids = [s.strip() for s in stations_param.split(',')]
+    else:
+         station_id = request.args.get('station', 'factionpunk')
+         station_ids = [station_id]
     
     refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
     if not refresh_token:
@@ -472,29 +480,40 @@ def cron_update():
              
         sp = spotipy.Spotify(auth=token_info['access_token'])
         
-        url = f"https://xmplaylist.com/station/{station_id}"
-        tracks = scrape_tracks(url, limit=100)
-        
-        if not tracks:
-             return {"error": f"No tracks found for station {station_id}"}, 404
-             
-        track_ids = [t['id'] for t in tracks]
-        
-        # Get station name from the scraper if possible, otherwise format ID loosely
         all_stations = get_stations()
-        station_url_suffix = f"/station/{station_id}"
-        station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), station_id.replace('-', ' ').title())
+        results = []
         
-        playlist_url = create_playlist_and_add_tracks(
-            sp, track_ids, station_id, 'recent', None, station_name
-        )
-        
-        return {
-            "success": True, 
-            "station": station_name,
-            "playlist_url": playlist_url, 
-            "tracks_added": len(track_ids)
-        }
+        for sid in station_ids:
+             try:
+                 url = f"https://xmplaylist.com/station/{sid}"
+                 tracks = scrape_tracks(url, limit=100)
+                 
+                 if not tracks:
+                      results.append({"station": sid, "error": f"No tracks found for station {sid}"})
+                      continue
+                      
+                 track_ids = [t['id'] for t in tracks]
+                 
+                 # Get station name from the scraper if possible, otherwise format ID loosely
+                 station_url_suffix = f"/station/{sid}"
+                 station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), sid.replace('-', ' ').title())
+                 
+                 playlist_url = create_playlist_and_add_tracks(
+                     sp, track_ids, sid, 'recent', None, station_name
+                 )
+                 
+                 results.append({
+                     "success": True, 
+                     "station": station_name,
+                     "playlist_url": playlist_url, 
+                     "tracks_added": len(track_ids)
+                 })
+             except Exception as inner_e:
+                 import traceback
+                 traceback.print_exc()
+                 results.append({"station": sid, "error": str(inner_e)})
+                 
+        return {"results": results}
     except Exception as e:
         import traceback
         traceback.print_exc()
