@@ -483,20 +483,38 @@ def cron_update():
         all_stations = get_stations()
         results = []
         
-        for sid in station_ids:
+        for input_sid in station_ids:
              try:
+                 sid = input_sid
+                 resolved_name = None
+                 input_lower = input_sid.lower()
+                 
+                 for s in all_stations:
+                     s_id = str(s.get('id', '')).lower()
+                     s_num = str(s.get('number', '')).lower()
+                     if s_num == '9999': s_num = ''
+                     s_name = str(s.get('name', '')).lower()
+                     s_name_no_num = s_name.split(' - ', 1)[-1] if ' - ' in s_name else s_name
+                     
+                     if input_lower in (s_id, s_num, s_name_no_num, s_name_no_num.replace(' ', ''), s_name):
+                         sid = s.get('id')
+                         resolved_name = s.get('name')
+                         break
+                         
                  url = f"https://xmplaylist.com/station/{sid}"
                  tracks = scrape_tracks(url, limit=100)
                  
                  if not tracks:
-                      results.append({"station": sid, "error": f"No tracks found for station {sid}"})
+                      results.append({"station": input_sid, "error": f"No tracks found for station {input_sid}"})
                       continue
                       
                  track_ids = [t['id'] for t in tracks]
                  
-                 # Get station name from the scraper if possible, otherwise format ID loosely
-                 station_url_suffix = f"/station/{sid}"
-                 station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), sid.replace('-', ' ').title())
+                 if resolved_name:
+                     station_name = resolved_name
+                 else:
+                     station_url_suffix = f"/station/{sid}"
+                     station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), sid.replace('-', ' ').title())
                  
                  playlist_url = create_playlist_and_add_tracks(
                      sp, track_ids, sid, 'recent', None, station_name
@@ -511,7 +529,7 @@ def cron_update():
              except Exception as inner_e:
                  import traceback
                  traceback.print_exc()
-                 results.append({"station": sid, "error": str(inner_e)})
+                 results.append({"station": input_sid, "error": str(inner_e)})
                  
         return {"results": results}
     except Exception as e:

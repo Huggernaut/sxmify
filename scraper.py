@@ -1,4 +1,4 @@
-from curl_cffi import requests
+import requests
 from bs4 import BeautifulSoup
 import re
 import json
@@ -13,7 +13,7 @@ def get_stations():
     url = "https://xmplaylist.com/station"
     try:
         print(f"Fetching stations from {url}...")
-        response = requests.get(url, impersonate="chrome")
+        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
         print(f"Station Fetch Status: {response.status_code}")
         response.raise_for_status()
     except Exception as e:
@@ -107,7 +107,7 @@ def fetch_from_api(station_id, mode, days=None, limit=60):
 def fetch_all_results(url, limit, params=None):
     print(f"API Fetch: {url} params={params}")
     try:
-        resp = requests.get(url, params=params, impersonate="chrome")
+        resp = requests.get(url, params=params, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
         if resp.status_code != 200:
             print(f"API Error {resp.status_code}")
             return []
@@ -129,7 +129,7 @@ def fetch_paged_results(url, target_count):
     while next_url and len(all_tracks) < target_count:
         print(f"Fetching Page: {next_url}")
         try:
-            resp = requests.get(next_url, impersonate="chrome")
+            resp = requests.get(next_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
             if resp.status_code != 200:
                 break
             
