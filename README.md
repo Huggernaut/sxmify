@@ -1,5 +1,7 @@
 # Sxmify
 
+**Live Site:** [sxmify.vercel.app](https://sxmify.vercel.app/)
+
 A Python web application that scrapes song history from **xmplaylist.com** and automatically exports the tracks to a new **Spotify** playlist. Built out of equal frustration with Spotify for their incredibly repetitive algos and Sirius for closing my "Trust me bro, I'm a dealership and we just sold this car; please refresh its trial" loophole.
 
 Built to support all stations available on xmplaylist.com (there might be some funkiness with stations that begin with a number). Possibly adding support for something other than Spotify in the future, but that would involve making an Apple account or actually using Amazon Music.
