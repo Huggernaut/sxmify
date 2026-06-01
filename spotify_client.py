@@ -10,7 +10,7 @@ def get_spotify_client(client_id, client_secret):
         client_id=client_id,
         client_secret=client_secret,
         redirect_uri="http://localhost:8888/callback",
-        scope="playlist-modify-public playlist-modify-private",
+        scope="playlist-modify-public playlist-modify-private ugc-image-upload",
         cache_handler=MemoryCacheHandler()
     ))
 
