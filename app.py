@@ -60,13 +60,28 @@ def login():
         session['return_to_review'] = True
     elif request.args.get('next') == 'bulk':
         session['return_to_bulk'] = True
+    elif request.args.get('next') == 'token':
+        session['return_to_token'] = True
         
     return redirect(auth_url)
 
 @app.route('/callback')
 def callback():
     sp_oauth = create_spotify_oauth()
+    # Save redirect variables before clearing the session
+    return_to_review = session.get('return_to_review')
+    last_scrape = session.get('last_scrape')
+    return_to_bulk = session.get('return_to_bulk')
+    return_to_token = session.get('return_to_token')
+    
     session.clear()
+    
+    # Restore redirect variables to the cleared session
+    if return_to_review: session['return_to_review'] = return_to_review
+    if last_scrape: session['last_scrape'] = last_scrape
+    if return_to_bulk: session['return_to_bulk'] = return_to_bulk
+    if return_to_token: session['return_to_token'] = return_to_token
+    
     code = request.args.get('code')
     try:
         token_info = sp_oauth.get_access_token(code)
@@ -84,7 +99,7 @@ def callback():
     except:
         pass
 
-    # Check for return to review page
+    # Check for redirects
     if session.get('return_to_review') and session.get('last_scrape'):
          session.pop('return_to_review', None)
          return redirect(url_for('show_review'))
@@ -92,6 +107,10 @@ def callback():
     if session.get('return_to_bulk'):
         session.pop('return_to_bulk', None)
         return redirect(url_for('bulk_select'))
+        
+    if session.get('return_to_token'):
+        session.pop('return_to_token', None)
+        return redirect(url_for('show_token'))
 
     # Check for pending export
     pending_export = session.get('pending_export')
@@ -438,7 +457,7 @@ def logout():
 def show_token():
     token_info = session.get('token_info')
     if not token_info:
-        return redirect(url_for('login', next='index'))
+        return redirect(url_for('login', next='token'))
         
     refresh_token = token_info.get('refresh_token')
     

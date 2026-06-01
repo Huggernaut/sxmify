@@ -12,6 +12,11 @@
     <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column;">
         <div class="container" style="max-width: 100%; width: 100%; box-sizing: border-box;">
             <h1 style="margin: 0 0 1rem 0; text-align: center;">Sxmify</h1>
+            {% if error %}
+            <div class="error-banner" style="background-color: #ff3333; color: white; padding: 10px; border-radius: 4px; margin-bottom: 1rem; text-align: center; font-size: 0.9em; font-weight: bold; line-height: 1.4;">
+                {{ error }}
+            </div>
+            {% endif %}
             <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 2rem;">
                 {% if is_logged_in %}
                 <div style="display: flex; align-items: center;">
