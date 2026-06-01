@@ -68,7 +68,10 @@ def callback():
     sp_oauth = create_spotify_oauth()
     session.clear()
     code = request.args.get('code')
-    token_info = sp_oauth.get_access_token(code)
+    try:
+        token_info = sp_oauth.get_access_token(code)
+    except Exception as e:
+        return render_template('index.html', error=f"Spotify Authentication Error: {e}", stations=get_stations())
     session['token_info'] = token_info
     
     # Get user info for display
