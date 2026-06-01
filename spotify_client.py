@@ -115,6 +115,53 @@ def create_playlist_and_add_tracks(sp, track_ids, station_id="unknown", scrape_t
             sp.playlist_add_items(playlist_id, batch)
             print(f"Batch {i//batch_size + 1} added")
         
+    # Set the custom playlist cover image using the station logo
+    set_playlist_cover(sp, playlist_id, station_id)
+    
     print(f"Done! Playlist URL: {playlist_url}")
     return playlist_url
+
+def set_playlist_cover(sp, playlist_id, station_id):
+    if not station_id or station_id == "unknown":
+        return
+        
+    try:
+        import base64
+        import io
+        import requests
+        from PIL import Image
+        
+        image_url = f"https://xmplaylist.com/img/station/{station_id}-lg.png"
+        print(f"Fetching station logo from {image_url}...")
+        resp = requests.get(image_url, timeout=5)
+        if resp.status_code != 200:
+            # Fallback format
+            image_url = f"https://xmplaylist.com/img/station/{station_id}.png"
+            resp = requests.get(image_url, timeout=5)
+            
+        if resp.status_code == 200:
+            # Convert PNG to JPEG in-memory
+            png_image = Image.open(io.BytesIO(resp.content))
+            
+            # Transparency handling: convert transparent pixels to white
+            if png_image.mode in ('RGBA', 'LA') or (png_image.mode == 'P' and 'transparency' in png_image.info):
+                rgba_image = png_image.convert("RGBA")
+                background = Image.new("RGB", rgba_image.size, (255, 255, 255))
+                background.paste(rgba_image, mask=rgba_image.split()[3])
+                jpeg_image = background
+            else:
+                jpeg_image = png_image.convert("RGB")
+                
+            buffer = io.BytesIO()
+            jpeg_image.save(buffer, format="JPEG", quality=90)
+            image_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            print("Uploading cover image to Spotify...")
+            sp.playlist_upload_cover_image(playlist_id, image_b64)
+            print("Cover image uploaded successfully!")
+        else:
+            print(f"Station logo not found on xmplaylist.com (status: {resp.status_code})")
+    except Exception as e:
+        print(f"Warning: Could not upload playlist cover image: {e}")
+
 
