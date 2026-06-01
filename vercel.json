@@ -11,6 +11,10 @@
         {
             "path": "/api/cron/update?stations=radiomargaritaville&cumulative=true&blacklist=Jimmy%20Buffett",
             "schedule": "15 21 * * *"
+        },
+        {
+            "path": "/api/cron/update?stations=314&cumulative=true&blacklist=Green%20Day",
+            "schedule": "45 21 * * *"
         }
     ]
 }
