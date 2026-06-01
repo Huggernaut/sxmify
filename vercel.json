@@ -1,12 +1,16 @@
 {
     "crons": [
         {
-            "path": "/api/cron/update?stations=radiomargaritaville,unwellmusic,lithium,siriusxmchill",
+            "path": "/api/cron/update?stations=unwellmusic,lithium,siriusxmchill",
             "schedule": "0 21 * * *"
         },
         {
             "path": "/api/cron/update?stations=shade45,altnation,pop2k,siriusxmhits1,factionpunk",
             "schedule": "30 21 * * *"
+        },
+        {
+            "path": "/api/cron/update?stations=radiomargaritaville&cumulative=true&blacklist=Jimmy%20Buffett",
+            "schedule": "15 21 * * *"
         }
     ]
-}
+}

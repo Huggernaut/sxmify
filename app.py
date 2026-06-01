@@ -9,6 +9,19 @@ from spotify_client import create_playlist_and_add_tracks
 
 load_dotenv(override=True)
 
+def filter_blacklisted_tracks(tracks, blacklist_items):
+    if not blacklist_items or not tracks:
+        return tracks
+    # Filter case-insensitively on artist and title
+    return [
+        t for t in tracks 
+        if not any(
+            b.strip().lower() in t['artist'].lower() or 
+            b.strip().lower() in t['title'].lower() 
+            for b in blacklist_items if b.strip()
+        )
+    ]
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 if not app.secret_key:
@@ -272,6 +285,7 @@ def export():
     scrape_type = request.form.get('scrape_type', 'recent')
     days = request.form.get('days', None)
     reverse_order = request.form.get('reverse_order')
+    cumulative = request.form.get('cumulative') == 'true'
     
     if reverse_order:
          track_ids.reverse()
@@ -282,7 +296,8 @@ def export():
         'station_name': station_name,
         'custom_name': custom_name,
         'scrape_type': scrape_type,
-        'days': days
+        'days': days,
+        'cumulative': cumulative
     }
 
     # Check if logged in
@@ -309,6 +324,7 @@ def finish_export(token_info, export_data):
     custom_name = export_data.get('custom_name')
     scrape_type = export_data.get('scrape_type', 'recent')
     days = export_data.get('days')
+    cumulative = export_data.get('cumulative', False)
     
     print(f"Starting export for {len(track_ids)} tracks...")
     
@@ -318,7 +334,7 @@ def finish_export(token_info, export_data):
     # Create Playlist
     sp = spotipy.Spotify(auth=token_info['access_token'])
     try:
-        playlist_url = create_playlist_and_add_tracks(sp, track_ids, station_id, scrape_type, days, station_name, custom_name)
+        playlist_url = create_playlist_and_add_tracks(sp, track_ids, station_id, scrape_type, days, station_name, custom_name, cumulative=cumulative)
         print(f"Playlist created successfully: {playlist_url}")
         
         # Clear pending if successful
@@ -363,6 +379,10 @@ def bulk_export():
     scrape_type = request.form.get('scrape_type', 'recent')
     days = request.form.get('days', '7')
     limit = 100 
+    cumulative = request.form.get('cumulative') == 'true'
+    
+    blacklist_param = request.form.get('blacklist')
+    blacklist_items = [b.strip() for b in blacklist_param.split(',')] if blacklist_param else None
 
     # 2. Check Login
     token_info = session.get('token_info', None)
@@ -371,7 +391,9 @@ def bulk_export():
         session['saved_bulk_data'] = {
             'station_urls': station_urls,
             'scrape_type': scrape_type,
-            'days': days
+            'days': days,
+            'cumulative': cumulative,
+            'blacklist': blacklist_param
         }
         return redirect(url_for('login', next='bulk'))
 
@@ -420,6 +442,14 @@ def bulk_export():
                  results.append(res)
                  continue
                  
+             # Apply blacklist filtering
+             tracks = filter_blacklisted_tracks(tracks, blacklist_items)
+             
+             if not tracks:
+                 res['error'] = "All tracks filtered out by blacklist"
+                 results.append(res)
+                 continue
+                 
              track_ids = [t['id'] for t in tracks]
              res['track_count'] = len(track_ids)
              
@@ -434,7 +464,7 @@ def bulk_export():
 
              # 3. Create Playlist
              playlist_url = create_playlist_and_add_tracks(
-                 sp, track_ids, station_id, scrape_type, days, station_name
+                 sp, track_ids, station_id, scrape_type, days, station_name, cumulative=cumulative
              )
              
              res['success'] = True
@@ -489,6 +519,14 @@ def cron_update():
     else:
          station_id = request.args.get('station', 'factionpunk')
          station_ids = [station_id]
+         
+    # Parse cumulative parameter
+    cumulative_param = request.args.get('cumulative')
+    cumulative = cumulative_param in ['true', '1']
+    
+    # Parse blacklist parameter
+    blacklist_param = request.args.get('blacklist')
+    blacklist_items = [b.strip() for b in blacklist_param.split(',')] if blacklist_param else None
     
     refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
     if not refresh_token:
@@ -499,7 +537,7 @@ def cron_update():
         token_info = sp_oauth.refresh_access_token(refresh_token)
         if not token_info:
             return {"error": "Failed to refresh Spotify token"}, 500
-             
+              
         sp = spotipy.Spotify(auth=token_info['access_token'])
         
         all_stations = get_stations()
@@ -530,6 +568,13 @@ def cron_update():
                       results.append({"station": input_sid, "error": f"No tracks found for station {input_sid}"})
                       continue
                       
+                 # Apply blacklist filtering
+                 tracks = filter_blacklisted_tracks(tracks, blacklist_items)
+                 
+                 if not tracks:
+                      results.append({"station": input_sid, "error": f"All tracks were filtered out by blacklist for station {input_sid}"})
+                      continue
+                      
                  track_ids = [t['id'] for t in tracks]
                  
                  if resolved_name:
@@ -539,7 +584,7 @@ def cron_update():
                      station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), sid.replace('-', ' ').title())
                  
                  playlist_url = create_playlist_and_add_tracks(
-                     sp, track_ids, sid, 'recent', None, station_name
+                     sp, track_ids, sid, 'recent', None, station_name, cumulative=cumulative
                  )
                  
                  results.append({
@@ -558,6 +603,7 @@ def cron_update():
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
+
 
 @app.route('/debug')
 def debug_info():

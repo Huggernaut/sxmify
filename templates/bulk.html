@@ -148,6 +148,17 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <label for="blacklist">Filter / Blacklist Keywords (comma-separated):</label>
+                    <input type="text" id="blacklist" name="blacklist" placeholder="E.g. Jimmy Buffett, Talk Show, Promo"
+                        style="width: 100%; padding: 10px; background: #252525; color: white; border: 1px solid #333; border-radius: 4px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <input type="checkbox" name="cumulative" id="cumulative" value="true" style="margin-right: 10px; transform: scale(1.2);">
+                    <label for="cumulative" style="margin-bottom: 0; cursor: pointer;">Cumulative Mode (Append Only)</label>
+                </div>
+
                 <button type="submit" class="btn primary-btn" id="update-btn">Update Selected Playlists</button>
                 <a href="{{ url_for('index') }}" class="secondary-btn">Back to Home</a>
             </form>

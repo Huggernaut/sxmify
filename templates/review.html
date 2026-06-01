@@ -108,11 +108,18 @@
         <form action="{{ url_for('export') }}" method="POST">
             <div class="actions-bar">
                 <label><input type="checkbox" id="select-all" checked> Select All</label>
-                <label><input type="checkbox" name="reverse_order" id="reverse-order"> Reverse Order</label>
+                <label><input type="checkbox" name="reverse_order" id="reverse-order" value="true"> Reverse Order</label>
+                <label><input type="checkbox" name="cumulative" id="cumulative" value="true"> Cumulative Mode (Append Only)</label>
                 <input type="hidden" name="station_id" value="{{ station_id }}">
                 <input type="hidden" name="station_name" value="{{ station_name }}">
                 <input type="hidden" name="scrape_type" value="{{ request.form.get('scrape_type', 'recent') }}">
                 <input type="hidden" name="days" value="{{ request.form.get('days', '7') }}">
+            </div>
+
+            <div style="margin-bottom: 1rem; margin-top: 1rem;">
+                <label for="blacklist-filter" style="display: block; margin-bottom: 0.5rem; color: #b3b3b3;">Filter / Blacklist Keywords (comma-separated):</label>
+                <input type="text" id="blacklist-filter" placeholder="E.g. Jimmy Buffett, Talk Show, Promo"
+                    style="width: 100%; padding: 10px; background: #252525; color: white; border: 1px solid #333; border-radius: 4px; box-sizing: border-box;">
             </div>
 
             <div class="track-list">
@@ -158,6 +165,36 @@
             const checkboxes = document.querySelectorAll('.track-check');
             checkboxes.forEach(cb => cb.checked = e.target.checked);
         });
+
+        // Blacklist Interactive Filter
+        const blacklistInput = document.getElementById('blacklist-filter');
+        if (blacklistInput) {
+            blacklistInput.addEventListener('input', function () {
+                const keywords = this.value.toLowerCase().split(',').map(k => k.trim()).filter(k => k);
+                const trackItems = document.querySelectorAll('.track-item');
+                
+                trackItems.forEach(item => {
+                    const title = item.querySelector('.track-title').innerText.toLowerCase();
+                    const artist = item.querySelector('.track-artist').innerText.toLowerCase();
+                    const checkbox = item.querySelector('.track-check');
+                    
+                    let matches = false;
+                    for (const kw of keywords) {
+                        if (title.includes(kw) || artist.includes(kw)) {
+                            matches = true;
+                            break;
+                        }
+                    }
+                    
+                    if (matches) {
+                        checkbox.checked = false;
+                        item.style.opacity = '0.3'; // Visual cue that it's filtered
+                    } else {
+                        item.style.opacity = '1';
+                    }
+                });
+            });
+        }
 
         const btn = document.getElementById('export-btn');
         if (btn) {
