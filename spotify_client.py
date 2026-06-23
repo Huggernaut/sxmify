@@ -62,27 +62,38 @@ def create_playlist_and_add_tracks(sp, track_ids, station_id="unknown", scrape_t
         sp.playlist_change_details(playlist_id, description=description)
         
         # Paginate to fetch all existing track IDs in the playlist
-        existing_track_ids = set()
+        existing_track_ids_set = set()
+        existing_track_uris = []
         offset = 0
         while True:
-            response = sp.playlist_items(playlist_id, fields="items(track(id)),next", offset=offset, limit=100)
+            response = sp.playlist_items(playlist_id, fields="items(track(id,uri)),next", offset=offset, limit=100)
             items = response.get('items', [])
             for item in items:
                 if item.get('track') and item['track'].get('id'):
-                    existing_track_ids.add(item['track']['id'])
+                    existing_track_ids_set.add(item['track']['id'])
+                    uri = item['track'].get('uri') or f"spotify:track:{item['track']['id']}"
+                    existing_track_uris.append(uri)
             if not response.get('next'):
                 break
             offset += len(items)
             
         # Filter new track IDs to only those not already in the playlist
-        new_track_ids = [tid for tid in track_ids if tid not in existing_track_ids]
+        new_track_uris = [f"spotify:track:{tid}" for tid in track_ids if tid not in existing_track_ids_set]
         
-        if new_track_ids:
-            track_uris = [f"spotify:track:{tid}" for tid in new_track_ids]
+        if new_track_uris:
+            # Combine new tracks at the top with existing tracks below
+            combined_uris = new_track_uris + existing_track_uris
             batch_size = 100
-            print(f"Adding {len(track_uris)} new tracks to cumulative playlist...")
-            for i in range(0, len(track_uris), batch_size):
-                batch = track_uris[i:i + batch_size]
+            print(f"Rewriting cumulative playlist with {len(new_track_uris)} new tracks prepended...")
+            
+            # First batch uses replace to clear old tracks and start writing
+            first_batch = combined_uris[:batch_size]
+            if first_batch:
+                sp.playlist_replace_items(playlist_id, first_batch)
+                print(f"Batch 1 processed")
+            
+            for i in range(batch_size, len(combined_uris), batch_size):
+                batch = combined_uris[i:i + batch_size]
                 sp.playlist_add_items(playlist_id, batch)
                 print(f"Batch {i//batch_size + 1} added")
         else:
