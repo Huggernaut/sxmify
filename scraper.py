@@ -153,27 +153,30 @@ def process_api_results(results):
     for item in results:
         try:
             spotify_id = item.get('spotify', {}).get('id')
-            if not spotify_id:
-                continue
                 
             track_obj = item.get('track', {})
             title = track_obj.get('title')
             artists = track_obj.get('artists', [])
             artist = artists[0] if artists else "Unknown"
             
+            if not title:
+                continue
+            
 
                  
             image_url = item.get('spotify', {}).get('albumImageSmall')
             if not image_url:
                  image_url = item.get('spotify', {}).get('albumImageMedium')
+                 
+            track_id = spotify_id if spotify_id else f"ytm_{title}_{artist}"
 
             tracks.append({
-                'id': spotify_id,
+                'id': track_id,
+                'spotify_id': spotify_id,
                 'title': title,
                 'artist': artist,
-
                 'image_url': image_url,
-                'spotify_url': f"https://open.spotify.com/track/{spotify_id}"
+                'spotify_url': f"https://open.spotify.com/track/{spotify_id}" if spotify_id else ""
             })
         except Exception as e:
             continue

@@ -115,6 +115,14 @@
                 <input type="hidden" name="scrape_type" value="{{ request.form.get('scrape_type', 'recent') }}">
                 <input type="hidden" name="days" value="{{ request.form.get('days', '7') }}">
             </div>
+            
+            <div style="margin-bottom: 1rem; margin-top: 1rem;">
+                <label for="platform" style="display: block; margin-bottom: 0.5rem; color: #b3b3b3;">Target Platform:</label>
+                <select id="platform" name="platform" style="width: 100%; padding: 10px; background: #252525; color: white; border: 1px solid #333; border-radius: 4px; box-sizing: border-box;">
+                    <option value="spotify">Spotify</option>
+                    <option value="ytmusic">YouTube Music</option>
+                </select>
+            </div>
 
             <div style="margin-bottom: 1rem; margin-top: 1rem;">
                 <label for="blacklist-filter" style="display: block; margin-bottom: 0.5rem; color: #b3b3b3;">Filter / Blacklist Keywords (comma-separated):</label>
@@ -126,6 +134,8 @@
                 {% for track in tracks %}
                 <div class="track-item">
                     <input type="checkbox" name="track_ids" value="{{ track.id }}" class="track-check" checked>
+                    <input type="hidden" name="track_titles_{{ track.id }}" value="{{ track.title }}">
+                    <input type="hidden" name="track_artists_{{ track.id }}" value="{{ track.artist }}">
                     <div class="track-content">
                         {% if track.image_url %}
                         <img src="{{ track.image_url }}" class="track-img" alt="Album Art">

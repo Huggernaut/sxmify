@@ -39,16 +39,17 @@ else:
     SPOTIPY_REDIRECT_URI = raw_redirect_uri
 # User must update Dashboard to this URI or use the one they configured.
 
-from spotipy.cache_handler import MemoryCacheHandler
+from spotipy.cache_handler import MemoryCacheHandler, FlaskSessionCacheHandler
 
-def create_spotify_oauth():
+def create_spotify_oauth(use_session=True):
     print(f"DEBUG: Using Redirect URI: {SPOTIPY_REDIRECT_URI}")
+    cache_handler = FlaskSessionCacheHandler(session) if use_session else MemoryCacheHandler()
     return SpotifyOAuth(
         client_id=SPOTIPY_CLIENT_ID,
         client_secret=SPOTIPY_CLIENT_SECRET,
         redirect_uri=SPOTIPY_REDIRECT_URI,
         scope="playlist-modify-public playlist-modify-private ugc-image-upload",
-        cache_handler=MemoryCacheHandler()
+        cache_handler=cache_handler
     )
 
 @app.route('/')
@@ -201,6 +202,8 @@ def scrape():
     user_display_name = session.get('user_display_name')
     user_image_url = session.get('user_image_url')
 
+    # No longer storing current_tracks in session to prevent cookie bloat
+
     return render_template('review.html', 
                            tracks=tracks, 
                            target_url=target_url, 
@@ -264,6 +267,8 @@ def show_review():
     user_display_name = session.get('user_display_name')
     user_image_url = session.get('user_image_url')
 
+    # No longer storing current_tracks in session to prevent cookie bloat
+
     return render_template('review.html', 
                             tracks=tracks, 
                             target_url=target_url, 
@@ -286,6 +291,7 @@ def export():
     days = request.form.get('days', None)
     reverse_order = request.form.get('reverse_order')
     cumulative = request.form.get('cumulative') == 'true'
+    platform = request.form.get('platform', 'spotify')
     
     if reverse_order:
          track_ids.reverse()
@@ -297,24 +303,30 @@ def export():
         'custom_name': custom_name,
         'scrape_type': scrape_type,
         'days': days,
-        'cumulative': cumulative
+        'cumulative': cumulative,
+        'platform': platform
     }
 
-    # Check if logged in
-    token_info = session.get('token_info', None)
-    if not token_info:
-        # Not logged in? Save intent and redirect to login
-        session['pending_export'] = export_data
-        return redirect(url_for('login'))
+    if platform == 'spotify':
+        # Check if logged in
+        token_info = session.get('token_info', None)
+        if not token_info:
+            # Not logged in? Save intent and redirect to login
+            session['pending_export'] = export_data
+            return redirect(url_for('login'))
 
-    # Check token expiration
-    sp_oauth = create_spotify_oauth()
-    if sp_oauth.is_token_expired(token_info):
-        print("Token expired (export). Refreshing...")
-        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-        session['token_info'] = token_info
+        # Check token expiration
+        sp_oauth = create_spotify_oauth()
+        if sp_oauth.is_token_expired(token_info):
+            print("Token expired (export). Refreshing...")
+            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+            session['token_info'] = token_info
+            
+        return finish_export(token_info, export_data)
         
-    return finish_export(token_info, export_data)
+    elif platform == 'ytmusic':
+        # YouTube Music uses local oauth.json or environment variables, not a web flow for now.
+        return finish_export(None, export_data)
 
 def finish_export(token_info, export_data):
     """Helper to actually create the playlist"""
@@ -325,24 +337,62 @@ def finish_export(token_info, export_data):
     scrape_type = export_data.get('scrape_type', 'recent')
     days = export_data.get('days')
     cumulative = export_data.get('cumulative', False)
+    platform = export_data.get('platform', 'spotify')
     
-    print(f"Starting export for {len(track_ids)} tracks...")
+    print(f"Starting export for {len(track_ids)} tracks to {platform}...")
     
     if not track_ids:
         return redirect(url_for('index'))
         
-    # Create Playlist
-    sp = spotipy.Spotify(auth=token_info['access_token'])
-    try:
-        playlist_url = create_playlist_and_add_tracks(sp, track_ids, station_id, scrape_type, days, station_name, custom_name, cumulative=cumulative)
-        print(f"Playlist created successfully: {playlist_url}")
-        
-        # Clear pending if successful
-        session.pop('pending_export', None)
-        
-        return render_template('success.html', playlist_url=playlist_url, count=len(track_ids))
-    except spotipy.exceptions.SpotifyException as e:
-         return render_template('index.html', error=f"Spotify Error: {e}")
+    if platform == 'spotify':
+        # Create Playlist
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        try:
+            playlist_url = create_playlist_and_add_tracks(sp, track_ids, station_id, scrape_type, days, station_name, custom_name, cumulative=cumulative)
+            print(f"Playlist created successfully: {playlist_url}")
+            
+            # Clear pending if successful
+            session.pop('pending_export', None)
+            
+            return render_template('success.html', playlist_url=playlist_url, count=len(track_ids))
+        except spotipy.exceptions.SpotifyException as e:
+             return render_template('index.html', error=f"Spotify Error: {e}", stations=get_stations())
+             
+    elif platform == 'ytmusic':
+        try:
+            from youtube_music_client import YouTubeMusicClient
+            yt_client = YouTubeMusicClient()
+            if not yt_client.yt:
+                return render_template('index.html', error="YouTube Music OAuth is not configured properly. Please provide oauth.json.", stations=get_stations())
+                
+            # Need to search for tracks since we only have IDs/Spotify IDs
+            yt_track_ids = []
+            current_tracks = []
+            for tid in track_ids:
+                title = request.form.get(f'track_titles_{tid}')
+                artist = request.form.get(f'track_artists_{tid}')
+                if title and artist:
+                    current_tracks.append({'id': tid, 'title': title, 'artist': artist})
+            
+            for tid in track_ids:
+                track = next((t for t in current_tracks if t['id'] == tid), None)
+                if track:
+                    yt_id = yt_client.search_track(track['title'], track['artist'])
+                    if yt_id:
+                        yt_track_ids.append(yt_id)
+            
+            if not yt_track_ids:
+                return render_template('index.html', error="Could not find any of the requested tracks on YouTube Music.", stations=get_stations())
+                
+            playlist_url = yt_client.create_playlist_and_add_tracks(
+                yt_track_ids, station_id, scrape_type, days, station_name, custom_name, cumulative=cumulative
+            )
+            
+            session.pop('pending_export', None)
+            return render_template('success.html', playlist_url=playlist_url, count=len(yt_track_ids))
+            
+        except Exception as e:
+            return render_template('index.html', error=f"YouTube Music Error: {e}", stations=get_stations())
 
 @app.route('/bulk')
 def bulk_select():
@@ -533,7 +583,7 @@ def cron_update():
         return {"error": "Missing SPOTIPY_REFRESH_TOKEN environment variable"}, 500
         
     try:
-        sp_oauth = create_spotify_oauth()
+        sp_oauth = create_spotify_oauth(use_session=False)
         token_info = sp_oauth.refresh_access_token(refresh_token)
         if not token_info:
             return {"error": "Failed to refresh Spotify token"}, 500
