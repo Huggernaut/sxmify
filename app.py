@@ -48,7 +48,7 @@ def create_spotify_oauth(use_session=True):
         client_id=SPOTIPY_CLIENT_ID,
         client_secret=SPOTIPY_CLIENT_SECRET,
         redirect_uri=SPOTIPY_REDIRECT_URI,
-        scope="playlist-modify-public playlist-modify-private ugc-image-upload",
+        scope="playlist-modify-public playlist-modify-private ugc-image-upload user-read-private",
         cache_handler=cache_handler
     )
 
