@@ -1,8 +1,10 @@
 flask
 gunicorn
-spotipy
 requests
 beautifulsoup4
 python-dotenv
 lxml
 ytmusicapi
+google-auth
+google-auth-oauthlib
+google-api-python-client

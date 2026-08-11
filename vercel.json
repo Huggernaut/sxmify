@@ -1,4 +1,16 @@
 {
+    "builds": [
+        {
+            "src": "app.py",
+            "use": "@vercel/python"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "app.py"
+        }
+    ],
     "crons": [
         {
             "path": "/api/cron/update?stations=unwellmusic,lithium,siriusxmchill",
@@ -17,4 +29,4 @@
             "schedule": "45 21 * * *"
         }
     ]
-}
+}

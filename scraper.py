@@ -172,11 +172,9 @@ def process_api_results(results):
 
             tracks.append({
                 'id': track_id,
-                'spotify_id': spotify_id,
                 'title': title,
                 'artist': artist,
-                'image_url': image_url,
-                'spotify_url': f"https://open.spotify.com/track/{spotify_id}" if spotify_id else ""
+                'image_url': image_url
             })
         except Exception as e:
             continue

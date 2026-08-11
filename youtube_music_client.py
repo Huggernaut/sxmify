@@ -5,7 +5,7 @@ from ytmusicapi import YTMusic
 from base_client import BaseStreamingClient
 
 class YouTubeMusicClient(BaseStreamingClient):
-    def __init__(self, auth_file="oauth.json"):
+    def __init__(self, auth_file="headers_auth.json"):
         # The auth_file could be either oauth.json or headers_auth.json
         # Check if file exists, else try to use environment variable
         
@@ -19,18 +19,35 @@ class YouTubeMusicClient(BaseStreamingClient):
                 f.write(os.environ.get("YTMUSIC_OAUTH"))
             
         try:
-            self.yt = YTMusic(self.auth_file)
+            import json
+            from ytmusicapi.auth.oauth.credentials import OAuthCredentials
+            
+            with open(self.auth_file, "r") as f:
+                auth_data = json.load(f)
+                
+            client_id = auth_data.get("clientId")
+            client_secret = auth_data.get("clientSecret")
+            
+            if client_id and client_secret:
+                creds = OAuthCredentials(client_id, client_secret)
+                self.yt = YTMusic(self.auth_file, oauth_credentials=creds)
+            else:
+                self.yt = YTMusic(self.auth_file)
+            
+            # YouTube Music blocks search for OAuth clients, so use unauth for search
+            self.yt_search = YTMusic()
         except Exception as e:
             print(f"Warning: Failed to initialize YTMusic: {e}")
             self.yt = None
+            self.yt_search = None
 
     def search_track(self, title, artist):
-        if not self.yt:
+        if not self.yt_search:
             return None
         
         query = f"{title} {artist}"
         try:
-            search_results = self.yt.search(query, filter="songs", limit=1)
+            search_results = self.yt_search.search(query, filter="songs", limit=1)
             if search_results:
                 return search_results[0].get('videoId')
         except Exception as e:

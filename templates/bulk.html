@@ -88,8 +88,8 @@
                 {% else %}
                 <div style="display: flex; align-items: center;">
                     <a href="{{ url_for('login', next='bulk') }}" class="btn"
-                        style="background-color: #1DB954; color: white; padding: 5px 15px; font-size: 0.9em; text-decoration: none; border-radius: 4px; display: inline-block;">Login
-                        with Spotify</a>
+                        style="background-color: #4285F4; color: white; padding: 5px 15px; font-size: 0.9em; text-decoration: none; border-radius: 4px; display: inline-block;">Log in
+                        with Google</a>
                 </div>
                 {% endif %}
             </div>
@@ -138,6 +138,16 @@
                     </select>
                 </div>
 
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="platform">Target Platform:</label>
+                    <select id="platform" name="platform">
+                        {% if is_logged_in %}
+                        <option value="ytmusic_personal">Personal YouTube Music Account</option>
+                        {% endif %}
+                        <option value="ytmusic">Public Bot Account (Demo Mode)</option>
+                    </select>
+                </div>
+
                 <div class="form-group" id="days_group"
                     style="{% if selected_scrape_type != 'most_heard' %}display: none;{% endif %}">
                     <label for="days">Time Period</label>
@@ -150,7 +160,7 @@
 
                 <div class="form-group">
                     <label for="blacklist">Filter / Blacklist Keywords (comma-separated):</label>
-                    <input type="text" id="blacklist" name="blacklist" placeholder="E.g. Jimmy Buffett, Coldplay"
+                    <input type="text" id="blacklist" name="blacklist" placeholder="E.g. Jimmy Buffett, Green Day"
                         style="width: 100%; padding: 10px; background: #252525; color: white; border: 1px solid #333; border-radius: 4px; box-sizing: border-box;">
                 </div>
 

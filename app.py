@@ -1,13 +1,15 @@
 import os
 import datetime
 from flask import Flask, request, url_for, session, redirect, render_template
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 from scraper import scrape_tracks, get_stations
-from spotify_client import create_playlist_and_add_tracks
+from google_yt_client import get_google_auth_flow, create_playlist_and_add_tracks_google
+from youtube_music_client import YouTubeMusicClient
+import googleapiclient.discovery
+from google.oauth2.credentials import Credentials
 
 load_dotenv(override=True)
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 def filter_blacklisted_tracks(tracks, blacklist_items):
     if not blacklist_items or not tracks:
@@ -27,35 +29,21 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 if not app.secret_key:
     # Use a secure random key if not provided (note: sessions will reset on app restart)
     app.secret_key = os.urandom(24)
-app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
+app.config['SESSION_COOKIE_NAME'] = 'yt-login-session'
 
 # Configuration
-SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
-SPOTIPY_CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
-raw_redirect_uri = os.environ.get("SPOTIPY_REDIRECT_URI", "https://sxmify.vercel.app/callback")
+raw_redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:5000/callback")
 if not raw_redirect_uri.startswith("http"):
-    SPOTIPY_REDIRECT_URI = f"https://{raw_redirect_uri}"
+    GOOGLE_REDIRECT_URI = f"https://{raw_redirect_uri}"
 else:
-    SPOTIPY_REDIRECT_URI = raw_redirect_uri
+    GOOGLE_REDIRECT_URI = raw_redirect_uri
 # User must update Dashboard to this URI or use the one they configured.
 
-from spotipy.cache_handler import MemoryCacheHandler, FlaskSessionCacheHandler
-
-def create_spotify_oauth(use_session=True):
-    print(f"DEBUG: Using Redirect URI: {SPOTIPY_REDIRECT_URI}")
-    cache_handler = FlaskSessionCacheHandler(session) if use_session else MemoryCacheHandler()
-    return SpotifyOAuth(
-        client_id=SPOTIPY_CLIENT_ID,
-        client_secret=SPOTIPY_CLIENT_SECRET,
-        redirect_uri=SPOTIPY_REDIRECT_URI,
-        scope="playlist-modify-public playlist-modify-private ugc-image-upload user-read-private",
-        cache_handler=cache_handler
-    )
 
 @app.route('/')
 def index():
     stations = get_stations()
-    is_logged_in = session.get('token_info') is not None
+    is_logged_in = session.get('google_credentials') is not None
     user_display_name = session.get('user_display_name') if is_logged_in else None
     user_image_url = session.get('user_image_url') if is_logged_in else None
         
@@ -66,8 +54,12 @@ def index():
 
 @app.route('/login')
 def login():
-    sp_oauth = create_spotify_oauth()
-    auth_url = sp_oauth.get_authorize_url()
+    flow = get_google_auth_flow(GOOGLE_REDIRECT_URI)
+    auth_url, state = flow.authorization_url(prompt='consent select_account', access_type='offline')
+    
+    session['oauth_state'] = state
+    if hasattr(flow, 'code_verifier'):
+        session['code_verifier'] = flow.code_verifier
     
     # Check if we should return to review page
     if request.args.get('next') == 'review':
@@ -81,37 +73,45 @@ def login():
 
 @app.route('/callback')
 def callback():
-    sp_oauth = create_spotify_oauth()
     # Save redirect variables before clearing the session
     return_to_review = session.get('return_to_review')
     last_scrape = session.get('last_scrape')
     return_to_bulk = session.get('return_to_bulk')
     return_to_token = session.get('return_to_token')
     
-    session.clear()
-    
-    # Restore redirect variables to the cleared session
-    if return_to_review: session['return_to_review'] = return_to_review
-    if last_scrape: session['last_scrape'] = last_scrape
-    if return_to_bulk: session['return_to_bulk'] = return_to_bulk
-    if return_to_token: session['return_to_token'] = return_to_token
+    # Do not clear session yet, state might be needed by oauthlib
     
     code = request.args.get('code')
     try:
-        token_info = sp_oauth.get_access_token(code)
+        flow = get_google_auth_flow(GOOGLE_REDIRECT_URI)
+        if 'code_verifier' in session:
+            flow.code_verifier = session['code_verifier']
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        session['google_credentials'] = {
+            'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes
+        }
     except Exception as e:
-        return render_template('index.html', error=f"Spotify Authentication Error: {e}", stations=get_stations())
-    session['token_info'] = token_info
+        return render_template('index.html', error=f"Google Authentication Error: {e}", stations=get_stations())
     
-    # Get user info for display
+    # Get user info for display using YouTube Data API
     try:
-        sp = spotipy.Spotify(auth=token_info['access_token'])
-        current_user = sp.current_user()
-        session['user_display_name'] = current_user.get('display_name')
-        if current_user.get('images'):
-            session['user_image_url'] = current_user['images'][0]['url']
-    except:
-        pass
+        youtube = googleapiclient.discovery.build('youtube', 'v3', credentials=credentials)
+        channels_response = youtube.channels().list(mine=True, part='snippet').execute()
+        items = channels_response.get('items', [])
+        if items:
+            snippet = items[0]['snippet']
+            session['user_display_name'] = snippet.get('title')
+            thumbnails = snippet.get('thumbnails', {})
+            if 'default' in thumbnails:
+                session['user_image_url'] = thumbnails['default']['url']
+    except Exception as e:
+        print(f"Error fetching user profile: {e}")
 
     # Check for redirects
     if session.get('return_to_review') and session.get('last_scrape'):
@@ -129,23 +129,12 @@ def callback():
     # Check for pending export
     pending_export = session.get('pending_export')
     if pending_export:
-        return finish_export(token_info, pending_export)
+        return finish_export(pending_export)
         
     return redirect(url_for('index'))
 
 @app.route('/scrape', methods=['POST'])
 def scrape():
-    # Authentication check intentionally skipped to allow guest scraping
-    
-    # Check token expiration IF logged in (just cleanup)
-    token_info = session.get('token_info', None)
-    if token_info:
-        sp_oauth = create_spotify_oauth()
-        if sp_oauth.is_token_expired(token_info):
-            print("Token expired. Refreshing...")
-            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-            session['token_info'] = token_info
-    
     base_url = request.form.get('url')
     station_name = request.form.get('station_name')
     scrape_type = request.form.get('scrape_type', 'recent')
@@ -197,12 +186,9 @@ def scrape():
         pass
 
     # Render Review Page
-    # Pass login status so view knows whether to say "Export" or "Login & Export"
-    is_logged_in = session.get('token_info') is not None
+    is_logged_in = session.get('google_credentials') is not None
     user_display_name = session.get('user_display_name')
     user_image_url = session.get('user_image_url')
-
-    # No longer storing current_tracks in session to prevent cookie bloat
 
     return render_template('review.html', 
                            tracks=tracks, 
@@ -229,9 +215,6 @@ def show_review():
     days = last_scrape.get('days')
     limit = last_scrape.get('limit')
     
-    # Logic duplication from scrape() - cleaner refactor would be to extract this
-    # but for now, keep it simple.
-    
     if not base_url:
         return redirect(url_for('index'))
         
@@ -248,10 +231,6 @@ def show_review():
     elif scrape_type == 'recent':
         scrape_description = "Recently Played"
 
-    # Don't re-scrape if we can avoid it? 
-    # Actually we should re-scrape to be safe and simple, or store tracks in session (too big?)
-    # Re-scraping is safer for state.
-    
     print(f"Re-Scraping {target_url} (limit={limit})...")
     tracks = scrape_tracks(target_url, limit=limit)
     
@@ -263,11 +242,9 @@ def show_review():
     except Exception:
         pass
         
-    is_logged_in = session.get('token_info') is not None
+    is_logged_in = session.get('google_credentials') is not None
     user_display_name = session.get('user_display_name')
     user_image_url = session.get('user_image_url')
-
-    # No longer storing current_tracks in session to prevent cookie bloat
 
     return render_template('review.html', 
                             tracks=tracks, 
@@ -291,13 +268,22 @@ def export():
     days = request.form.get('days', None)
     reverse_order = request.form.get('reverse_order')
     cumulative = request.form.get('cumulative') == 'true'
-    platform = request.form.get('platform', 'spotify')
+    platform = request.form.get('platform', 'ytmusic') # Changed default to ytmusic
     
     if reverse_order:
          track_ids.reverse()
 
+    # Reconstruct track details from form inputs for Google API
+    track_details = []
+    for tid in track_ids:
+        title = request.form.get(f'track_titles_{tid}')
+        artist = request.form.get(f'track_artists_{tid}')
+        if title and artist:
+            track_details.append({'id': tid, 'title': title, 'artist': artist})
+
     export_data = {
         'track_ids': track_ids,
+        'track_details': track_details,
         'station_id': station_id,
         'station_name': station_name,
         'custom_name': custom_name,
@@ -307,79 +293,65 @@ def export():
         'platform': platform
     }
 
-    if platform == 'spotify':
-        # Check if logged in
-        token_info = session.get('token_info', None)
-        if not token_info:
-            # Not logged in? Save intent and redirect to login
+    if platform == 'ytmusic_personal':
+        if not session.get('google_credentials'):
             session['pending_export'] = export_data
             return redirect(url_for('login'))
-
-        # Check token expiration
-        sp_oauth = create_spotify_oauth()
-        if sp_oauth.is_token_expired(token_info):
-            print("Token expired (export). Refreshing...")
-            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-            session['token_info'] = token_info
-            
-        return finish_export(token_info, export_data)
+        return finish_export(export_data)
         
     elif platform == 'ytmusic':
-        # YouTube Music uses local oauth.json or environment variables, not a web flow for now.
-        return finish_export(None, export_data)
+        # Demo mode
+        return finish_export(export_data)
 
-def finish_export(token_info, export_data):
+def finish_export(export_data):
     """Helper to actually create the playlist"""
     track_ids = export_data.get('track_ids')
+    track_details = export_data.get('track_details', [])
     station_id = export_data.get('station_id')
     station_name = export_data.get('station_name')
     custom_name = export_data.get('custom_name')
     scrape_type = export_data.get('scrape_type', 'recent')
     days = export_data.get('days')
     cumulative = export_data.get('cumulative', False)
-    platform = export_data.get('platform', 'spotify')
+    platform = export_data.get('platform', 'ytmusic')
     
     print(f"Starting export for {len(track_ids)} tracks to {platform}...")
     
     if not track_ids:
         return redirect(url_for('index'))
         
-    if platform == 'spotify':
-        # Create Playlist
-        sp = spotipy.Spotify(auth=token_info['access_token'])
+    if platform == 'ytmusic_personal':
         try:
-            playlist_url = create_playlist_and_add_tracks(sp, track_ids, station_id, scrape_type, days, station_name, custom_name, cumulative=cumulative)
-            print(f"Playlist created successfully: {playlist_url}")
-            
-            # Clear pending if successful
-            session.pop('pending_export', None)
-            
-            return render_template('success.html', playlist_url=playlist_url, count=len(track_ids))
-        except spotipy.exceptions.SpotifyException as e:
-             return render_template('index.html', error=f"Spotify Error: {e}", stations=get_stations())
+            credentials_dict = session.get('google_credentials')
+            playlist_url = create_playlist_and_add_tracks_google(
+                credentials_dict, track_details, station_id, scrape_type, days, station_name, custom_name, cumulative=cumulative
+            )
+            if playlist_url:
+                session.pop('pending_export', None)
+                return render_template('success.html', playlist_url=playlist_url, count=len(track_ids))
+            else:
+                return render_template('index.html', error="Failed to create playlist on Google API.", stations=get_stations())
+        except Exception as e:
+             return render_template('index.html', error=f"Google API Error: {e}", stations=get_stations())
              
     elif platform == 'ytmusic':
+        # Demo mode using youtube_music_client
         try:
-            from youtube_music_client import YouTubeMusicClient
             yt_client = YouTubeMusicClient()
             if not yt_client.yt:
-                return render_template('index.html', error="YouTube Music OAuth is not configured properly. Please provide oauth.json.", stations=get_stations())
+                return render_template('index.html', error="YouTube Music OAuth is not configured properly on the server.", stations=get_stations())
                 
-            # Need to search for tracks since we only have IDs/Spotify IDs
             yt_track_ids = []
-            current_tracks = []
-            for tid in track_ids:
-                title = request.form.get(f'track_titles_{tid}')
-                artist = request.form.get(f'track_artists_{tid}')
-                if title and artist:
-                    current_tracks.append({'id': tid, 'title': title, 'artist': artist})
+            from concurrent.futures import ThreadPoolExecutor
             
-            for tid in track_ids:
-                track = next((t for t in current_tracks if t['id'] == tid), None)
-                if track:
-                    yt_id = yt_client.search_track(track['title'], track['artist'])
-                    if yt_id:
-                        yt_track_ids.append(yt_id)
+            def search_worker(track):
+                return yt_client.search_track(track['title'], track['artist'])
+                
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                results = executor.map(search_worker, track_details)
+                for res in results:
+                    if res:
+                        yt_track_ids.append(res)
             
             if not yt_track_ids:
                 return render_template('index.html', error="Could not find any of the requested tracks on YouTube Music.", stations=get_stations())
@@ -398,20 +370,14 @@ def finish_export(token_info, export_data):
 def bulk_select():
     stations = get_stations()
     
-    # Check for saved bulk data (from a previous login attempt)
     saved_data = session.get('saved_bulk_data', {})
     selected_urls = saved_data.get('station_urls', [])
     selected_scrape_type = saved_data.get('scrape_type', 'recent')
     selected_days = saved_data.get('days', '7')
     
-    is_logged_in = session.get('token_info') is not None
+    is_logged_in = session.get('google_credentials') is not None
     user_display_name = session.get('user_display_name') if is_logged_in else None
     user_image_url = session.get('user_image_url') if is_logged_in else None
-    
-    # Optional: Clear the saved data so it doesn't persist forever
-    # session.pop('saved_bulk_data', None) 
-    # Decision: Keep it for now, let it be overwritten next time or expire with session.
-    # It's less annoying if they navigate away and back.
     
     return render_template('bulk.html', 
                            stations=stations,
@@ -424,41 +390,29 @@ def bulk_select():
 
 @app.route('/bulk_export', methods=['POST'])
 def bulk_export():
-    # 1. Capture Form Data Immediately
     station_urls = request.form.getlist('station_urls')
     scrape_type = request.form.get('scrape_type', 'recent')
     days = request.form.get('days', '7')
     limit = 100 
     cumulative = request.form.get('cumulative') == 'true'
+    platform = request.form.get('platform', 'ytmusic')
     
     blacklist_param = request.form.get('blacklist')
     blacklist_items = [b.strip() for b in blacklist_param.split(',')] if blacklist_param else None
 
-    # 2. Check Login
-    token_info = session.get('token_info', None)
-    if not token_info:
-        # Save state to session
-        session['saved_bulk_data'] = {
-            'station_urls': station_urls,
-            'scrape_type': scrape_type,
-            'days': days,
-            'cumulative': cumulative,
-            'blacklist': blacklist_param
-        }
-        return redirect(url_for('login', next='bulk'))
+    if platform == 'ytmusic_personal':
+        if not session.get('google_credentials'):
+            session['saved_bulk_data'] = {
+                'station_urls': station_urls,
+                'scrape_type': scrape_type,
+                'days': days,
+                'cumulative': cumulative,
+                'blacklist': blacklist_param
+            }
+            return redirect(url_for('login', next='bulk'))
 
-    # Check token expiration
-    sp_oauth = create_spotify_oauth()
-    if sp_oauth.is_token_expired(token_info):
-        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
-        session['token_info'] = token_info
-
-    sp = spotipy.Spotify(auth=token_info['access_token'])
-    
-    # Cleanup saved data if we are proceeding successfully
     session.pop('saved_bulk_data', None) 
     
-    # Pre-fetch stations for name lookup
     all_stations = get_stations()
     station_map = {s['url']: s['name'] for s in all_stations}
     
@@ -477,7 +431,6 @@ def bulk_export():
          }
          
          try:
-             # 1. Scrape
              target_url = url
              if scrape_type == 'newest':
                  target_url = f"{url}/newest"
@@ -492,7 +445,6 @@ def bulk_export():
                  results.append(res)
                  continue
                  
-             # Apply blacklist filtering
              tracks = filter_blacklisted_tracks(tracks, blacklist_items)
              
              if not tracks:
@@ -500,10 +452,8 @@ def bulk_export():
                  results.append(res)
                  continue
                  
-             track_ids = [t['id'] for t in tracks]
-             res['track_count'] = len(track_ids)
+             res['track_count'] = len(tracks)
              
-             # 2. Extract station_id for naming
              station_id = "unknown"
              try:
                 parts = url.rstrip('/').split('/')
@@ -512,10 +462,27 @@ def bulk_export():
              except:
                  pass
 
-             # 3. Create Playlist
-             playlist_url = create_playlist_and_add_tracks(
-                 sp, track_ids, station_id, scrape_type, days, station_name, cumulative=cumulative
-             )
+             if platform == 'ytmusic_personal':
+                 credentials_dict = session.get('google_credentials')
+                 playlist_url = create_playlist_and_add_tracks_google(
+                     credentials_dict, tracks, station_id, scrape_type, days, station_name, cumulative=cumulative
+                 )
+             else:
+                 yt_client = YouTubeMusicClient()
+                 yt_track_ids = []
+                 from concurrent.futures import ThreadPoolExecutor
+                 
+                 def search_worker(track):
+                     return yt_client.search_track(track['title'], track['artist'])
+                     
+                 with ThreadPoolExecutor(max_workers=10) as executor:
+                     search_results = executor.map(search_worker, tracks)
+                     for res in search_results:
+                         if res:
+                             yt_track_ids.append(res)
+                 playlist_url = yt_client.create_playlist_and_add_tracks(
+                     yt_track_ids, station_id, scrape_type, days, station_name, cumulative=cumulative
+                 )
              
              res['success'] = True
              res['playlist_url'] = playlist_url
@@ -535,24 +502,7 @@ def logout():
 
 @app.route('/token')
 def show_token():
-    token_info = session.get('token_info')
-    if not token_info:
-        return redirect(url_for('login', next='token'))
-        
-    refresh_token = token_info.get('refresh_token')
-    
-    html = f"""
-    <html>
-    <body style="font-family: sans-serif; padding: 2rem;">
-        <h2>Your Spotify Refresh Token</h2>
-        <p>To enable the Vercel Cron Job, you need to add this <strong>Refresh Token</strong> to your Vercel Environment Variables as <pre style="display:inline; background:#eee; padding:2px 4px;">SPOTIPY_REFRESH_TOKEN</pre></p>
-        <textarea style="width: 100%; height: 100px; font-family: monospace; padding: 10px;" readonly>{refresh_token}</textarea>
-        <br><br>
-        <a href="/">Back to App</a>
-    </body>
-    </html>
-    """
-    return html
+    return redirect(url_for('index'))
 
 @app.route('/api/cron/update')
 def cron_update():
@@ -562,7 +512,6 @@ def cron_update():
     if not expected_secret or auth_header != f"Bearer {expected_secret}":
         return {"error": "Unauthorized"}, 401
     
-    # Allow station param, default to factionpunk
     stations_param = request.args.get('stations')
     if stations_param:
         station_ids = [s.strip() for s in stations_param.split(',')]
@@ -570,25 +519,17 @@ def cron_update():
          station_id = request.args.get('station', 'factionpunk')
          station_ids = [station_id]
          
-    # Parse cumulative parameter
     cumulative_param = request.args.get('cumulative')
     cumulative = cumulative_param in ['true', '1']
     
-    # Parse blacklist parameter
     blacklist_param = request.args.get('blacklist')
     blacklist_items = [b.strip() for b in blacklist_param.split(',')] if blacklist_param else None
     
-    refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
-    if not refresh_token:
-        return {"error": "Missing SPOTIPY_REFRESH_TOKEN environment variable"}, 500
-        
+    # Force demo mode for cron since it's server-to-server
     try:
-        sp_oauth = create_spotify_oauth(use_session=False)
-        token_info = sp_oauth.refresh_access_token(refresh_token)
-        if not token_info:
-            return {"error": "Failed to refresh Spotify token"}, 500
-              
-        sp = spotipy.Spotify(auth=token_info['access_token'])
+        yt_client = YouTubeMusicClient()
+        if not yt_client.yt:
+            return {"error": "Missing YTMUSIC_OAUTH env or oauth.json"}, 500
         
         all_stations = get_stations()
         results = []
@@ -618,14 +559,11 @@ def cron_update():
                       results.append({"station": input_sid, "error": f"No tracks found for station {input_sid}"})
                       continue
                       
-                 # Apply blacklist filtering
                  tracks = filter_blacklisted_tracks(tracks, blacklist_items)
                  
                  if not tracks:
                       results.append({"station": input_sid, "error": f"All tracks were filtered out by blacklist for station {input_sid}"})
                       continue
-                      
-                 track_ids = [t['id'] for t in tracks]
                  
                  if resolved_name:
                      station_name = resolved_name
@@ -633,15 +571,27 @@ def cron_update():
                      station_url_suffix = f"/station/{sid}"
                      station_name = next((s['name'] for s in all_stations if s['url'].endswith(station_url_suffix)), sid.replace('-', ' ').title())
                  
-                 playlist_url = create_playlist_and_add_tracks(
-                     sp, track_ids, sid, 'recent', None, station_name, cumulative=cumulative
+                 yt_track_ids = []
+                 from concurrent.futures import ThreadPoolExecutor
+                 
+                 def search_worker(track):
+                     return yt_client.search_track(track['title'], track['artist'])
+                     
+                 with ThreadPoolExecutor(max_workers=10) as executor:
+                     search_results = executor.map(search_worker, tracks)
+                     for res in search_results:
+                         if res:
+                             yt_track_ids.append(res)
+                 
+                 playlist_url = yt_client.create_playlist_and_add_tracks(
+                     yt_track_ids, sid, 'recent', None, station_name, cumulative=cumulative
                  )
                  
                  results.append({
                      "success": True, 
                      "station": station_name,
                      "playlist_url": playlist_url, 
-                     "tracks_added": len(track_ids)
+                     "tracks_added": len(yt_track_ids)
                  })
              except Exception as inner_e:
                  import traceback
@@ -654,7 +604,6 @@ def cron_update():
         traceback.print_exc()
         return {"error": str(e)}, 500
 
-
 @app.route('/debug')
 def debug_info():
     import os
@@ -664,61 +613,10 @@ def debug_info():
     info = []
     info.append(f"Python Version: {sys.version}")
     info.append(f"CWD: {os.getcwd()}")
-    
-    # Check directory listing
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        info.append(f"Script Dir: {current_dir}")
-        files = os.listdir(current_dir)
-        info.append(f"Files in Dir: {files}")
-        
-    except Exception as e:
-        info.append(f"File Error: {e}")
-        
-    # check stations
-    try:
-        from scraper import get_stations
-        stations = get_stations()
-        info.append(f"Station Count: {len(stations)}")
-        if stations:
-            info.append(f"Sample: {stations[0]}")
-    except Exception as e:
-        info.append(f"Station Error: {e}")
-
-    # check scraping tracks
-    try:
-        from scraper import scrape_tracks
-        # Test with SiriusXM Hits 1 (usually has data)
-        info.append("<br><strong>Testing Track Scrape (SiriusXM Hits 1)...</strong>")
-        tracks = scrape_tracks("https://xmplaylist.com/station/siriusxmhits1", limit=10)
-        info.append(f"Tracks Found: {len(tracks)}")
-        if tracks:
-            info.append(f"Sample Track: {tracks[0]}")
-        else:
-            info.append("No tracks found, likely blocked or empty.")
-            
-    except Exception as e:
-        info.append(f"Track Scrape Error: {e}")
-
-    # Raw API Test
-    try:
-        import cloudscraper
-        import html
-        url = "https://xmplaylist.com/api/station/siriusxmhits1"
-        info.append(f"<br><strong>Raw API Test ({url}) with CloudScraper...</strong>")
-        
-        scraper = cloudscraper.create_scraper()
-        resp = scraper.get(url)
-        info.append(f"Status Code: {resp.status_code}")
-        
-        text = resp.text
-        # Preview content (escape HTML to prevent rendering if it's a block page)
-        preview = html.escape(text[:1000])
-        info.append(f"Response Preview: {preview}")
-    except Exception as e:
-        info.append(f"Raw Request Error: {e}")
-        
     return "<br>".join(info)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True, ssl_context='adhoc')
+    # In production/deployment, use proper HTTPS and don't use ssl_context='adhoc'
+    # app.run(host='0.0.0.0', debug=True)
+    # Keeping adhoc for local dev testing if they run it locally
+    app.run(host='0.0.0.0', port=5000, debug=True)

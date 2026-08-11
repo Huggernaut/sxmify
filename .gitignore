@@ -6,3 +6,9 @@ __pycache__/
 .cache
 *.code-workspace
 test_*.py
+
+headers_auth.json
+curl.txt
+parse_curl.py
+parse_curl2.py
+test_*.py
