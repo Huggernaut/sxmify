@@ -525,11 +525,15 @@ def cron_update():
     blacklist_param = request.args.get('blacklist')
     blacklist_items = [b.strip() for b in blacklist_param.split(',')] if blacklist_param else None
     
-    # Force demo mode for cron since it's server-to-server
+    # Use personal auth for cron if available, fallback to bot account
     try:
-        yt_client = YouTubeMusicClient()
+        if os.environ.get("YTMUSIC_OAUTH_PERSONAL"):
+            yt_client = YouTubeMusicClient(env_var="YTMUSIC_OAUTH_PERSONAL")
+        else:
+            yt_client = YouTubeMusicClient()
+            
         if not yt_client.yt:
-            return {"error": "Missing YTMUSIC_OAUTH env or oauth.json"}, 500
+            return {"error": "Missing YTMUSIC_OAUTH_PERSONAL or YTMUSIC_OAUTH env"}, 500
         
         all_stations = get_stations()
         results = []

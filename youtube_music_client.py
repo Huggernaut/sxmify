@@ -5,18 +5,19 @@ from ytmusicapi import YTMusic
 from base_client import BaseStreamingClient
 
 class YouTubeMusicClient(BaseStreamingClient):
-    def __init__(self, auth_file="headers_auth.json"):
+    def __init__(self, auth_file="headers_auth.json", env_var="YTMUSIC_OAUTH"):
         # The auth_file could be either oauth.json or headers_auth.json
         # Check if file exists, else try to use environment variable
         
         self.auth_file = auth_file
         
-        if os.environ.get("YTMUSIC_OAUTH"):
-            # Write to a temporary oauth.json if it comes from env var (e.g. Vercel)
+        if os.environ.get(env_var):
+            # Write to a temporary file if it comes from env var (e.g. Vercel)
             import tempfile
-            self.auth_file = os.path.join(tempfile.gettempdir(), "oauth.json")
+            import uuid
+            self.auth_file = os.path.join(tempfile.gettempdir(), f"oauth_{uuid.uuid4().hex}.json")
             with open(self.auth_file, "w") as f:
-                f.write(os.environ.get("YTMUSIC_OAUTH"))
+                f.write(os.environ.get(env_var))
             
         try:
             import json
