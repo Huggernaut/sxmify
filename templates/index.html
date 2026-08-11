@@ -32,11 +32,11 @@
                     </span>
                 </div>
                 {% else %}
-                <div style="display: flex; align-items: center;">
-                    <span style="font-size: 0.85em; color: #aaa; margin-right: 15px;">Demo account available, just scrape without logging in!</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
                     <a href="{{ url_for('login') }}" class="btn"
                         style="background-color: #4285F4; color: white; padding: 5px 15px; font-size: 0.9em; text-decoration: none; border-radius: 4px; display: inline-block;">Log in
                         with Google</a>
+                    <span style="font-size: 0.75em; color: #aaa; margin-top: 8px; text-align: right; max-width: 280px;">It's probably smart to get scared off by that "Unverified App" screen. If it freaks you out, just scrape without logging in.</span>
                 </div>
                 {% endif %}
             </div>
