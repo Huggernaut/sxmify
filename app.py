@@ -61,7 +61,6 @@ def login():
     if hasattr(flow, 'code_verifier'):
         session['code_verifier'] = flow.code_verifier
     
-    # Check if we should return to review page
     if request.args.get('next') == 'review':
         session['return_to_review'] = True
     elif request.args.get('next') == 'bulk':
@@ -73,13 +72,10 @@ def login():
 
 @app.route('/callback')
 def callback():
-    # Save redirect variables before clearing the session
     return_to_review = session.get('return_to_review')
     last_scrape = session.get('last_scrape')
     return_to_bulk = session.get('return_to_bulk')
     return_to_token = session.get('return_to_token')
-    
-    # Do not clear session yet, state might be needed by oauthlib
     
     code = request.args.get('code')
     try:
@@ -99,7 +95,6 @@ def callback():
     except Exception as e:
         return render_template('index.html', error=f"Google Authentication Error: {e}", stations=get_stations())
     
-    # Get user info for display using YouTube Data API
     try:
         youtube = googleapiclient.discovery.build('youtube', 'v3', credentials=credentials)
         channels_response = youtube.channels().list(mine=True, part='snippet').execute()
@@ -111,9 +106,8 @@ def callback():
             if 'default' in thumbnails:
                 session['user_image_url'] = thumbnails['default']['url']
     except Exception as e:
-        print(f"Error fetching user profile: {e}")
+        pass
 
-    # Check for redirects
     if session.get('return_to_review') and session.get('last_scrape'):
          session.pop('return_to_review', None)
          return redirect(url_for('show_review'))
@@ -126,7 +120,6 @@ def callback():
         session.pop('return_to_token', None)
         return redirect(url_for('show_token'))
 
-    # Check for pending export
     pending_export = session.get('pending_export')
     if pending_export:
         return finish_export(pending_export)
@@ -141,7 +134,6 @@ def scrape():
     days = request.form.get('days', '7')
     limit = int(request.form.get('limit', 100))
 
-    # Store in session for potential return after login
     session['last_scrape'] = {
         'url': base_url,
         'station_name': station_name,
@@ -155,7 +147,6 @@ def scrape():
     if not base_url:
         return render_template('index.html', error="Please select a station.", stations=get_stations(), user_display_name=session.get('user_display_name'))
     
-    # Clean base_url
     base_url = base_url.rstrip('/')
 
     target_url = base_url
@@ -176,7 +167,6 @@ def scrape():
     if not tracks:
         return render_template('index.html', error="No tracks found on that page.", stations=get_stations(), user_display_name=session.get('user_display_name'))
 
-    # Extract station_id from URL
     station_id = "unknown"
     try:
         parts = target_url.rstrip('/').split('/')
@@ -185,7 +175,6 @@ def scrape():
     except Exception:
         pass
 
-    # Render Review Page
     is_logged_in = session.get('google_credentials') is not None
     user_display_name = session.get('user_display_name')
     user_image_url = session.get('user_image_url')
@@ -259,7 +248,6 @@ def show_review():
 
 @app.route('/export', methods=['POST'])
 def export():
-    # Gather form data
     track_ids = request.form.getlist('track_ids')
     station_id = request.form.get('station_id', 'unknown')
     station_name = request.form.get('station_name')
@@ -273,7 +261,6 @@ def export():
     if reverse_order:
          track_ids.reverse()
 
-    # Reconstruct track details from form inputs for Google API
     track_details = []
     for tid in track_ids:
         title = request.form.get(f'track_titles_{tid}')
@@ -300,7 +287,6 @@ def export():
         return finish_export(export_data)
         
     elif platform == 'ytmusic':
-        # Demo mode
         return finish_export(export_data)
 
 def finish_export(export_data):
@@ -335,7 +321,6 @@ def finish_export(export_data):
              return render_template('index.html', error=f"Google API Error: {e}", stations=get_stations())
              
     elif platform == 'ytmusic':
-        # Demo mode using youtube_music_client
         try:
             yt_client = YouTubeMusicClient()
             if not yt_client.yt:
@@ -608,19 +593,5 @@ def cron_update():
         traceback.print_exc()
         return {"error": str(e)}, 500
 
-@app.route('/debug')
-def debug_info():
-    import os
-    import json
-    import sys
-    
-    info = []
-    info.append(f"Python Version: {sys.version}")
-    info.append(f"CWD: {os.getcwd()}")
-    return "<br>".join(info)
-
 if __name__ == "__main__":
-    # In production/deployment, use proper HTTPS and don't use ssl_context='adhoc'
-    # app.run(host='0.0.0.0', debug=True)
-    # Keeping adhoc for local dev testing if they run it locally
     app.run(host='0.0.0.0', port=5000, debug=True)
