@@ -101,7 +101,16 @@ class YouTubeMusicClient(BaseStreamingClient):
                 
                 new_track_ids = [tid for tid in track_ids if tid not in existing_video_ids]
                 if new_track_ids:
-                    print(f"Adding {len(new_track_ids)} new tracks to YT Music cumulative playlist...")
+                    print(f"Adding {len(new_track_ids)} new tracks to YT Music cumulative playlist (at the top)...")
+                    
+                    try:
+                        # Change playlist setting to add to top so new songs appear first
+                        self.yt.edit_playlist(existing_playlist_id, addToTop=True)
+                    except Exception as e:
+                        print(f"Warning: Failed to set addToTop on playlist: {e}")
+                        
+                    # Reverse the list so the newest tracks stay at the very top if added sequentially by the backend
+                    new_track_ids.reverse()
                     self.yt.add_playlist_items(existing_playlist_id, new_track_ids)
                 else:
                     print("No new tracks to add.")

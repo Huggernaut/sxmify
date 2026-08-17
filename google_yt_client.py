@@ -137,19 +137,24 @@ def create_playlist_and_add_tracks_google(credentials_dict, track_details, stati
 
     if video_ids:
         print(f"Adding {len(video_ids)} tracks to playlist {existing_playlist_id}...")
-        for vid in video_ids:
+        for i, vid in enumerate(video_ids):
             try:
-                request = youtube.playlistItems().insert(
-                    part="snippet",
-                    body={
-                        "snippet": {
-                            "playlistId": existing_playlist_id,
-                            "resourceId": {
-                                "kind": "youtube#video",
-                                "videoId": vid
-                            }
+                body = {
+                    "snippet": {
+                        "playlistId": existing_playlist_id,
+                        "resourceId": {
+                            "kind": "youtube#video",
+                            "videoId": vid
                         }
                     }
+                }
+                
+                if cumulative:
+                    body["snippet"]["position"] = i
+                
+                request = youtube.playlistItems().insert(
+                    part="snippet",
+                    body=body
                 )
                 request.execute()
             except HttpError as e:
